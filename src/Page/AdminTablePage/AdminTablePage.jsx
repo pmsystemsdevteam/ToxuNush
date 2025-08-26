@@ -47,13 +47,16 @@ function AdminTablePage() {
   const [syncingId, setSyncingId] = useState(null);
   const [reserveAt, setReserveAt] = useState(""); // HH:MM
 
+  // NEW: bütün basketlər (popup üçün istifadə ediləcək)
+  const [allBaskets, setAllBaskets] = useState([]);
+  const [showOrdersPopup, setShowOrdersPopup] = useState(false);
+  const [ordersForTable, setOrdersForTable] = useState([]);
+
   useEffect(() => {
     if (selectedTableId != null) {
       const t = tables.find((x) => x.id === selectedTableId) || null;
       setSelectedTable(t);
-      // seçilən masa rezervdirsə, mövcud vaxtı inputa yaz
       if (t?.status === "reserved" && t?.orderTime) {
-        // orderTime HH:MM formatındadırsa birbaşa yaz
         const mm = /^([0-2]\d:[0-5]\d)$/.exec(t.orderTime);
         setReserveAt(mm ? mm[1] : "");
       } else {
@@ -70,12 +73,28 @@ function AdminTablePage() {
     return Number.isFinite(v) ? v : 0;
   };
 
+  const to2 = (n) => Number(n || 0).toFixed(2);
+
   const formatTime = (iso) => {
     try {
       const d = new Date(iso);
       return d.toLocaleTimeString("az-Latn-AZ", { hour: "2-digit", minute: "2-digit" });
     } catch {
       return null;
+    }
+  };
+
+  const formatDateTime = (iso) => {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleString("az-Latn-AZ", {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return iso ?? "";
     }
   };
 
@@ -91,6 +110,9 @@ function AdminTablePage() {
       const [tRes, bRes] = await Promise.all([axios.get(TABLES_URL), axios.get(BASKETS_URL)]);
       const tablesApi = Array.isArray(tRes.data) ? tRes.data : [];
       const basketsApi = Array.isArray(bRes.data) ? bRes.data : [];
+
+      // NEW: saxla
+      setAllBaskets(basketsApi);
 
       const latestByTableId = new Map();
       for (const b of basketsApi) {
@@ -151,9 +173,10 @@ function AdminTablePage() {
   };
 
   const postBasket = (tableWithNewStatus, reservedTimeText = "") => {
-    const extra = tableWithNewStatus.status === "reserved" && reservedTimeText
-      ? ` | Rezerv vaxtı: ${reservedTimeText}`
-      : "";
+    const extra =
+      tableWithNewStatus.status === "reserved" && reservedTimeText
+        ? ` | Rezerv vaxtı: ${reservedTimeText}`
+        : "";
     const payload = {
       table_id: tableWithNewStatus.backendTableId,
       note: `Status: ${statusNames[tableWithNewStatus.status] || tableWithNewStatus.status}${extra}`,
@@ -167,7 +190,6 @@ function AdminTablePage() {
     const prev = tables.find((t) => t.id === tableId);
     if (!prev) return;
 
-    // Rezerv seçiləndə vaxt məcburidir
     if (newStatusUI === "reserved" && !reserveAt) {
       showNote("Zəhmət olmasa rezerv vaxtını seçin (HH:MM).", "error");
       return;
@@ -184,7 +206,7 @@ function AdminTablePage() {
 
     if (newStatusUI === "reserved") {
       nextOrderPrice = 0;
-      nextOrderTime = reserveAt; // istifadəçinin təyin etdiyi vaxt
+      nextOrderTime = reserveAt;
     } else if (newStatusUI === "empty") {
       nextOrderPrice = 0;
       nextOrderTime = null;
@@ -216,7 +238,6 @@ function AdminTablePage() {
       showNote("Status dəyişdirildi və serverə yazıldı.", "success");
     } catch (e) {
       console.error(e);
-      // Revert UI
       setTables((p) =>
         p.map((t) =>
           t.id === tableId
@@ -236,6 +257,17 @@ function AdminTablePage() {
     setTables((prev) =>
       prev.map((t) => (t.id === tableId ? { ...t, orderPrice: safeNumber(price) } : t))
     );
+  };
+
+  // NEW: “Sifarişi gör” düyməsi üçün
+  const openOrdersPopup = (tbl) => {
+    if (!tbl?.backendTableId) return;
+    // Ən yenisi birinci
+    const rows = allBaskets
+      .filter((b) => b?.table?.id === tbl.backendTableId)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    setOrdersForTable(rows);
+    setShowOrdersPopup(true);
   };
 
   return (
@@ -275,7 +307,10 @@ function AdminTablePage() {
             <h2>Masa {selectedTable.number}</h2>
 
             <div className="status-info">
-              <div className="status-color" style={{ backgroundColor: statusColors[selectedTable.status] || "#ccc" }}></div>
+              <div
+                className="status-color"
+                style={{ backgroundColor: statusColors[selectedTable.status] || "#ccc" }}
+              ></div>
               <span>Status: {statusNames[selectedTable.status]}</span>
             </div>
 
@@ -310,7 +345,7 @@ function AdminTablePage() {
             </div>
 
             <div className="status-controls">
-              <h3>Statusu Dəyişdir (serverə dərhal yazılır)</h3>
+              <h3>Statusu Dəyişdir </h3>
               <div className="status-buttons">
                 <button
                   onClick={() => changeTableStatus(selectedTable.id, "empty")}
@@ -338,7 +373,7 @@ function AdminTablePage() {
                   className={selectedTable.status === "waitingFood" ? "active" : ""}
                   disabled={syncingId === selectedTable.id}
                 >
-                  Yemək Gözləyir
+                  Yəmək Gözləyir
                 </button>
                 <button
                   onClick={() => changeTableStatus(selectedTable.id, "waitingWaiter")}
@@ -350,6 +385,67 @@ function AdminTablePage() {
               </div>
               {syncingId === selectedTable.id && <p className="hint">Yazılır...</p>}
             </div>
+
+            {/* NEW: Sifarişləri gör düyməsi */}
+            <button
+              className="submit-btn"
+              onClick={() => openOrdersPopup(selectedTable)}
+              disabled={!selectedTable?.backendTableId}
+            >
+              Sifarişi gör
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* NEW: Sifarişlər popupu */}
+      {showOrdersPopup && (
+        <div
+          className="popup-overlay"
+          style={{ zIndex: 1002 }}
+          onClick={() => setShowOrdersPopup(false)}
+        >
+          <div className="table-popup" onClick={(e) => e.stopPropagation()}>
+            <button className="close-btn" onClick={() => setShowOrdersPopup(false)}>×</button>
+            <h2>Masa {selectedTable?.number} — Sifarişlər</h2>
+
+            {ordersForTable.length === 0 ? (
+              <div className="empty-state">Bu masada sifariş tapılmadı.</div>
+            ) : (
+              <div className="orders-list">
+                {ordersForTable.map((b) => (
+                  <div className="order-card" key={b.id}>
+                    <div className="order-header">
+                      <span>Basket #{b.id}</span>
+                      <span>{formatDateTime(b.created_at)}</span>
+                    </div>
+
+                    <div className="order-line">
+                      <strong>Qeyd:</strong> {b.note || "—"}
+                    </div>
+
+                    <div className="order-meta">
+                      <span>Servis: <strong>{to2(b.service_cost)}₼</strong></span>
+                      <span>Cəmi: <strong>{to2(b.total_cost)}₼</strong></span>
+                      <span>Vaxt: <strong>{b.total_time || 0} dəq</strong></span>
+                    </div>
+
+                    {Array.isArray(b.items) && b.items.length > 0 && (
+                      <ul className="order-items">
+                        {b.items.map((it) => (
+                          <li key={it.id} className="order-item-row">
+                            <span>
+                              {it.count} × {it.name_az}
+                            </span>
+                            <span>{to2(Number(it.cost) * Number(it.count))}₼</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

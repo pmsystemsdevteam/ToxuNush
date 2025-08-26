@@ -125,6 +125,57 @@
     transform: translateY(-50%);
   }
 }
+/* --- Sifarişlər popupu (yeni) --- */
+.orders-list {
+  max-height: 60vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.order-card {
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #2c3e50;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.order-line {
+  color: #34495e;
+  margin-bottom: 8px;
+}
+
+.order-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 14px;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.order-items {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 0 0;
+}
+
+.order-item-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-top: 1px dashed #e5e7eb;
+}
 
 // Popup stilleri
 .popup-overlay {
