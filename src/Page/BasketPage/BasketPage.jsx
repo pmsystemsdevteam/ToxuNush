@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "./BasketPage.scss";
 import axios from "axios";
-import { baseUrl } from "../../../baseUrl";
+import { baseUrl } from "../../../BaseUrl";
+
 import toast from "react-hot-toast";
 
 const BASKET_KEY = "basket";

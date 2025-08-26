@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "./ProductPage.scss";
 import axios from "axios";
-import { baseUrl } from "../../../baseUrl";
+import { baseUrl } from "../../../BaseUrl";
+
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 

@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import "./AdminCategoryPage.scss";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { baseUrl } from "../../../baseUrl";
+import { baseUrl } from "../../../BaseUrl";
+
 
 const API_URL = `${baseUrl}/api/categories/`;
 
