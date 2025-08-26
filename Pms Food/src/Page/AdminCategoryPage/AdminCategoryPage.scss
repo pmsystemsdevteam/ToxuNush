@@ -1,0 +1,254 @@
+// AdminCategoryPage.scss
+.admin-category-page {
+  padding: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+
+  h1 {
+    background: linear-gradient(135deg, #2c3e50 0%, #4a6491 100%);
+    color: white;
+    margin: 0;
+    padding: 20px;
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  h2 {
+    color: #fff;
+    margin: 0 0 20px 0;
+    padding: 10px 10px;
+    border-bottom: 2px solid #eaecef;
+    font-weight: 500;
+    background: linear-gradient(135deg, #2c3e50 0%, #4a6491 100%);
+    border-radius: 10px;
+
+  }
+}
+
+.category-form-container {
+  padding: 25px;
+  border-bottom: 1px solid #eaecef;
+  background-color: #fafbfc;
+  
+}
+
+.category-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+
+
+  .form-group {
+    margin-bottom: 15px;
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #2c3e50;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #d1d8e0;
+      border-radius: 6px;
+      font-size: 16px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+
+      &:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+      }
+
+      &::placeholder {
+        color: #aab7c5;
+      }
+    }
+  }
+
+  button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  .submit-btn {
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    color: white;
+    grid-column: 1;
+
+    &:hover {
+      background: linear-gradient(135deg, #219653 0%, #27ae60 100%);
+    }
+  }
+
+  .cancel-btn {
+    background: #e74c3c;
+    color: white;
+    grid-column: 2;
+
+    &:hover {
+      background: #c0392b;
+    }
+  }
+}
+
+.categories-list {
+  padding: 25px;
+
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #7f8c8d;
+    font-style: italic;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    border: 1px dashed #d1d8e0;
+  }
+}
+
+.table-container {
+  overflow-x: auto;
+  border: 1px solid #eaecef;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+
+    th,
+    td {
+      padding: 15px;
+      text-align: left;
+      border-bottom: 1px solid #eaecef;
+    }
+
+    th {
+      background-color: #f5f7fa;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    tr {
+      &:last-child {
+        td {
+          border-bottom: none;
+        }
+      }
+
+      &:hover {
+        background-color: #f9fafb;
+      }
+    }
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+
+  button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+
+  .edit-btn {
+    background-color: #3498db;
+    color: white;
+  }
+
+  .delete-btn {
+    background-color: #e74c3c;
+    color: white;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .admin-category-page {
+    padding: 10px;
+  }
+
+  .category-form {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .category-form-container,
+  .categories-list {
+    padding: 15px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 20px;
+    padding: 15px;
+  }
+
+  .category-form {
+    .form-group {
+      input {
+        padding: 10px;
+      }
+    }
+
+    button {
+      padding: 10px 15px;
+      font-size: 14px;
+    }
+  }
+
+  .table-container {
+    table {
+      th,
+      td {
+        padding: 10px;
+      }
+    }
+  }
+}

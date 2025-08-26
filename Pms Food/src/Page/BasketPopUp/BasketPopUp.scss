@@ -1,0 +1,88 @@
+:root{
+  --bb-bg: #111827;           /* qutu fonu */
+  --bb-fg: #ffffff;           /* ikon rəngi */
+  --bb-badge: #ABC7DA;        /* badge fonu */
+  --bb-shadow: 0 10px 24px rgba(0,0,0,0.25);
+  --bb-border: rgba(255,255,255,0.12);
+}
+
+/* Sağ-yuxarı sabit səbət qutusu */
+.basket-box {
+  position: fixed;
+  top: 150px;
+  right: calc(16px + env(safe-area-inset-right));
+  z-index: 1100;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+
+  background: var(--bb-bg);
+  color: var(--bb-fg);
+  text-decoration: none;
+  box-shadow: var(--bb-shadow);
+  border: 1px solid var(--bb-border);
+
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+
+  i {
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgba(0,0,0,0.28);
+    background: #0b1220;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+/* Rəqəm badge-i */
+.basket-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: var(--bb-badge);
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  box-shadow: 0 0 0 2px var(--bb-bg);
+
+  transform-origin: 100% 0%;
+  animation: bb-pop 160ms ease-in-out;
+}
+
+@keyframes bb-pop {
+  from { transform: scale(0.7); opacity: 0.6; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+/* Kiçik ekran */
+@media (max-width: 480px) {
+  .basket-box {
+    width: 52px;
+    height: 52px;
+    right: calc(14px + env(safe-area-inset-right));
+     top: 100px;
+
+    i { font-size: 20px; }
+  }
+}

@@ -1,0 +1,467 @@
+// AdminProductPage.scss
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css");
+
+// Dəyişənlər
+$primary-color: #abc7da;
+$secondary-color: #424242;
+$background-color: #d0d7ddaa;
+$text-color: #333;
+$light-color: #777;
+$error-color: #e74c3c;
+$success-color: #27ae60;
+$border-color: #ddd;
+$card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+
+// Mixinlər
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin transition($property: all, $duration: 0.3s, $easing: ease-in-out) {
+  transition: $property $duration $easing;
+}
+
+.admin-product-page {
+  font-family: "Poppins", sans-serif;
+  padding: 2rem;
+  background-color: $background-color;
+  min-height: 100vh;
+  margin-top: 50px;
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .page-header2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    .page-title {
+      font-size: 2rem;
+      color: $secondary-color;
+      margin: 0;
+    }
+
+    .add-product-btn {
+      display: flex;
+      text-decoration: none;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 1.5rem;
+      background-color: $primary-color;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      @include transition;
+
+      &:hover {
+        background-color: darken($primary-color, 10%);
+      }
+    }
+  }
+
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .product-card {
+    background-color: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: $card-shadow;
+    @include transition;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-image {
+      position: relative;
+      height: 200px;
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        @include transition;
+      }
+
+      .card-badges {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        .badge {
+          padding: 0.3rem 0.8rem;
+          border-radius: 20px;
+          font-size: 0.75rem;
+          font-weight: 500;
+
+          &.vegetarian {
+            background-color: $success-color;
+            color: white;
+          }
+
+          &.halal {
+            background-color: #3498db;
+            color: white;
+          }
+        }
+      }
+    }
+
+    .card-content {
+      padding: 1.5rem;
+
+      .product-name {
+        font-size: 1.3rem;
+        color: $secondary-color;
+        margin: 0 0 0.5rem 0;
+      }
+
+      .name-translations {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        margin-bottom: 1rem;
+
+        span {
+          font-size: 0.9rem;
+          color: $light-color;
+          font-style: italic;
+        }
+      }
+
+      .product-category {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        color: $primary-color;
+        font-weight: 500;
+      }
+
+      .product-description {
+        margin-bottom: 1.5rem;
+
+        p {
+          margin: 0 0 0.5rem 0;
+          color: $text-color;
+          line-height: 1.5;
+        }
+
+        .description-translations {
+          p {
+            font-size: 0.9rem;
+            color: $light-color;
+            font-style: italic;
+          }
+        }
+      }
+
+      .product-details {
+        display: flex;
+        justify-content: space-between;
+
+        .detail-item {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: $text-color;
+          font-weight: 500;
+
+          i {
+            color: $primary-color;
+          }
+        }
+      }
+    }
+
+    .card-actions {
+      display: flex;
+      border-top: 1px solid #eee;
+
+      .action-btn {
+        flex: 1;
+        padding: 1rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+        @include transition;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        text-decoration: none;
+        gap: 10px;
+        display: flex;
+        color: #424242;
+        &.edit {
+          color: #3498db;
+
+          &:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+          }
+        }
+
+        &.delete {
+          color: $error-color;
+
+          &:hover {
+            background-color: rgba(231, 76, 60, 0.1);
+          }
+        }
+      }
+    }
+  }
+
+  // Pagination stilləri
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+
+    .pagination-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.2rem;
+      background-color: white;
+      border: 1px solid $border-color;
+      border-radius: 6px;
+      cursor: pointer;
+      @include transition;
+
+      &:hover:not(.disabled) {
+        background-color: $primary-color;
+        color: white;
+        border-color: $primary-color;
+      }
+
+      &.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .pagination-numbers {
+      display: flex;
+      gap: 0.5rem;
+
+      .pagination-number {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        border: 1px solid $border-color;
+        background-color: white;
+        cursor: pointer;
+        @include transition;
+
+        &:hover {
+          background-color: lighten($primary-color, 40%);
+          border-color: $primary-color;
+        }
+
+        &.active {
+          background-color: $primary-color;
+          color: white;
+          border-color: $primary-color;
+        }
+      }
+    }
+  }
+
+  // Modal stilləri
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    @include flex-center;
+    z-index: 1000;
+    padding: 1rem;
+
+    .confirmation-modal {
+      background-color: white;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        border-bottom: 1px solid $border-color;
+
+        h3 {
+          margin: 0;
+          color: $text-color;
+        }
+
+        .close-btn {
+          background: none;
+          border: none;
+          font-size: 1.2rem;
+          color: $light-color;
+          cursor: pointer;
+          @include transition;
+
+          &:hover {
+            color: $error-color;
+          }
+        }
+      }
+
+      .modal-content {
+        padding: 2rem 1.5rem;
+        text-align: center;
+
+        .warning-icon {
+          color: $error-color;
+          font-size: 3rem;
+          margin-bottom: 1.5rem;
+        }
+
+        p {
+          color: $text-color;
+          line-height: 1.6;
+          margin: 0;
+        }
+      }
+
+      .modal-actions {
+        display: flex;
+        padding: 1rem 1.5rem;
+        border-top: 1px solid $border-color;
+
+        .btn {
+          flex: 1;
+          padding: 0.8rem 1.5rem;
+          border-radius: 8px;
+          font-weight: 500;
+          cursor: pointer;
+          @include transition;
+
+          &.cancel {
+            background-color: transparent;
+            border: 1px solid $light-color;
+            color: $light-color;
+            margin-right: 1rem;
+
+            &:hover {
+              background-color: #f5f5f5;
+            }
+          }
+
+          &.confirm {
+            background-color: $error-color;
+            border: 1px solid $error-color;
+            color: white;
+
+            &:hover {
+              background-color: darken($error-color, 10%);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive dizayn
+@media screen and (max-width: 768px) {
+  .admin-product-page {
+    padding: 1.5rem 1rem;
+
+    .page-header2 {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+
+      .page-title {
+        font-size: 1.8rem;
+      }
+    }
+
+    .products-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .product-card {
+      .card-content {
+        padding: 1.2rem;
+      }
+    }
+
+    .pagination {
+      flex-direction: column;
+      gap: 1rem;
+
+      .pagination-numbers {
+        order: -1;
+      }
+    }
+
+    .modal-overlay {
+      padding: 0.5rem;
+
+      .confirmation-modal {
+        .modal-content {
+          padding: 1.5rem 1rem;
+        }
+
+        .modal-actions {
+          flex-direction: column;
+          gap: 0.8rem;
+
+          .btn.cancel {
+            margin-right: 0;
+            order: 2;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Animasiya
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.product-card {
+  animation: fadeIn 0.5s ease-out;
+}

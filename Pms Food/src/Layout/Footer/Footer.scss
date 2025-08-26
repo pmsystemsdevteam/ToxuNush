@@ -1,0 +1,197 @@
+// Footer.scss
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+// Dəyişənlər
+$primary-color: #ABC7DA;
+$secondary-color: #424242;
+$background-color: #424242;
+$text-color: #ecf0f1;
+$light-color: #bdc3c7;
+
+// Mixinlər
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin transition($property: all, $duration: 0.3s, $easing: ease-in-out) {
+  transition: $property $duration $easing;
+}
+
+.footer {
+  background-color: $background-color;
+  color: $text-color;
+  padding: 3rem 0 0;
+  font-family: 'Poppins', sans-serif;
+  
+  .footer-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem 2rem;
+    
+    .footer-section {
+      flex: 1;
+      min-width: 250px;
+      margin-bottom: 2rem;
+      padding: 0 1rem;
+      
+      h3 {
+        color: $primary-color;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+      }
+      
+      h4 {
+        color: $primary-color;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+        position: relative;
+        padding-bottom: 0.5rem;
+        
+        &:after {
+          content: '';
+          position: absolute;
+          left: 0;
+          bottom: 0;
+          width: 50px;
+          height: 2px;
+          background-color: $primary-color;
+        }
+      }
+      
+      p {
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+        color: $light-color;
+      }
+      
+      ul {
+        list-style: none;
+        padding: 0;
+        
+        li {
+          margin-bottom: 0.8rem;
+          
+          a {
+            color: $light-color;
+            text-decoration: none;
+            @include transition;
+            
+            &:hover {
+              color: $primary-color;
+              padding-left: 5px;
+            }
+          }
+        }
+        
+        &.contact-info {
+          li {
+            @include flex-center;
+            justify-content: flex-start;
+            
+            i {
+              margin-right: 10px;
+              color: $primary-color;
+              width: 20px;
+            }
+          }
+        }
+      }
+      
+      .social-icons {
+        display: flex;
+        margin-top: 1.5rem;
+        
+        a {
+          @include flex-center;
+          width: 40px;
+          height: 40px;
+          background-color: rgba(255, 255, 255, 0.1);
+          border-radius: 50%;
+          margin-right: 10px;
+          color: $text-color;
+          text-decoration: none;
+          @include transition;
+          
+          &:hover {
+            background-color: $primary-color;
+            transform: translateY(-5px);
+          }
+        }
+      }
+    }
+  }
+  
+  .footer-bottom {
+    background-color: darken($background-color, 5%);
+    padding: 1.5rem 0;
+    text-align: center;
+    
+    p {
+      margin: 0;
+      color: $light-color;
+      font-size: 0.9rem;
+      
+      span {
+        color: $primary-color;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// Responsive dizayn
+@media screen and (max-width: 768px) {
+  .footer {
+    .footer-content {
+      flex-direction: column;
+      
+      .footer-section {
+        margin-bottom: 2.5rem;
+        text-align: center;
+        
+        h4:after {
+          left: 50%;
+          transform: translateX(-50%);
+        }
+        
+        .social-icons {
+          justify-content: center;
+        }
+        
+        ul.contact-info li {
+          justify-content: center;
+        }
+      }
+    }
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .footer {
+    padding: 2rem 0 0;
+    
+    .footer-content {
+      padding: 0 1rem 1.5rem;
+      
+      .footer-section {
+        min-width: 100%;
+        padding: 0;
+      }
+    }
+    
+    .footer-bottom {
+      padding: 1rem;
+      
+      p {
+        font-size: 0.8rem;
+      }
+    }
+  }
+}

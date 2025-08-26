@@ -1,0 +1,597 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+// Dəyişənlər
+$primary-color: #ABC7DA;
+$secondary-color: #424242;
+$background-color: #d0d7ddaa;
+$text-color: #333;
+$light-color: #777;
+$success-color: #27ae60;
+$error-color: #424242;
+
+// Mixinlər
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin transition($property: all, $duration: 0.3s, $easing: ease-in-out) {
+  transition: $property $duration $easing;
+}
+
+// Screen reader only
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.basket-page {
+  font-family: 'Poppins', sans-serif;
+  padding: 2rem 0;
+  background-color: $background-color;
+  min-height: 100vh;
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  .page-title {
+    font-size: 2.5rem;
+    color: $secondary-color;
+    margin-bottom: 1rem;
+    text-align: center;
+
+    @media (max-width: 768px) {
+      font-size: 2rem;
+    }
+  }
+
+  /* --- Masa məlumatı (yalnız görüntü) --- */
+  .table-info {
+    @include flex-center;
+    gap: .6rem;
+    width: 100%;
+    margin: 0 auto 1.5rem auto;
+    background: white;
+    border-radius: 12px;
+    padding: .75rem 1rem;
+    border: 2px dashed lighten($primary-color, 20%);
+    color: $secondary-color;
+    font-weight: 600;
+    max-width: 500px;
+
+    .icon {
+      color: $primary-color;
+      font-size: 1.1rem;
+    }
+
+    .label {
+      opacity: .9;
+    }
+
+    .value {
+      margin-left: .4rem;
+      background: lighten($primary-color, 35%);
+      color: darken($primary-color, 25%);
+      padding: .15rem .6rem;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+  }
+
+  .empty-basket {
+    text-align: center;
+    padding: 3rem 1rem;
+
+    i {
+      font-size: 4rem;
+      color: $light-color;
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      color: $secondary-color;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      color: $light-color;
+      font-size: 1.1rem;
+    }
+  }
+
+  .basket-content {
+    display: flex;
+    gap: 2rem;
+
+    @media (max-width: 992px) {
+      flex-direction: column;
+    }
+  }
+
+  .basket-items {
+    flex: 2;
+
+    .basket-item {
+      display: flex;
+      background-color: white;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+      @include transition;
+
+      &:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+      }
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .item-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-right: 1.5rem;
+
+        @media (max-width: 768px) {
+          width: 100%;
+          height: 200px;
+          margin-right: 0;
+          margin-bottom: 1rem;
+        }
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+      }
+
+      .item-details {
+        flex: 1;
+
+        .item-name {
+          font-size: 1.3rem;
+          color: $secondary-color;
+          margin-bottom: 0.5rem;
+        }
+
+        .item-description {
+          color: $light-color;
+          margin-bottom: 0.8rem;
+          line-height: 1.4;
+        }
+
+        .item-price {
+          font-weight: 600;
+          color: $primary-color;
+          font-size: 1.1rem;
+        }
+
+        .item-tags {
+          margin-top: .4rem;
+          display: flex;
+          gap: .5rem;
+
+          .tag {
+            font-size: .85rem;
+            padding: .2rem .5rem;
+            border-radius: 6px;
+            &.vegan { background: #e8f7ee; color: #1e8e4d; }
+            &.halal { background: #fdecea; color: #d93025; }
+          }
+        }
+      }
+
+      .item-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        margin: 0 1.5rem;
+
+        @media (max-width: 768px) {
+          margin: 1rem 0;
+          flex-direction: row;
+          width: 100%;
+        }
+
+        .quantity-controls {
+          display: flex;
+          align-items: center;
+          margin-bottom: 1rem;
+
+          .quantity-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 1px solid $primary-color;
+            background-color: transparent;
+            color: $primary-color;
+            font-size: 1rem;
+            cursor: pointer;
+            @include transition;
+
+            &:hover {
+              background-color: $primary-color;
+              color: white;
+            }
+          }
+
+          .quantity {
+            margin: 0 1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            min-width: 30px;
+            text-align: center;
+          }
+        }
+
+        .remove-btn {
+          padding: 0.5rem 1rem;
+          background-color: transparent;
+          border: 1px solid $error-color;
+          color: $error-color;
+          border-radius: 5px;
+          cursor: pointer;
+          font-weight: 500;
+          @include transition;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          &:hover {
+            background-color: $error-color;
+            color: white;
+          }
+        }
+      }
+
+      .item-total {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: $primary-color;
+        display: flex;
+        align-items: center;
+
+        @media (max-width: 768px) {
+          justify-content: center;
+          margin-top: 1rem;
+        }
+      }
+    }
+  }
+
+  .order-summary {
+    flex: 1;
+    background-color: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    height: fit-content;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+
+    h2 {
+      font-size: 1.5rem;
+      color: $secondary-color;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid $background-color;
+    }
+
+    /* Order-summary daxilində də masa məlumatını göstərmək istəyərsənsə */
+    .table-info-inline {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      color: $secondary-color;
+
+      .value {
+        background: lighten($primary-color, 35%);
+        color: darken($primary-color, 25%);
+        padding: .1rem .5rem;
+        border-radius: 999px;
+      }
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #eee;
+
+      &.total {
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: $primary-color;
+        border-bottom: none;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 2px solid $background-color;
+      }
+    }
+
+    .preparation-time {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 1.5rem 0;
+      padding: 1rem;
+      background-color: lighten($primary-color, 40%);
+      border-radius: 8px;
+      color: darken($primary-color, 20%);
+      font-weight: 500;
+
+      i {
+        color: $primary-color;
+      }
+    }
+
+    .order-note {
+      margin: 1.5rem 0;
+
+      h3 {
+        font-size: 1.2rem;
+        color: $secondary-color;
+        margin-bottom: 0.8rem;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 100px;
+        padding: 0.8rem;
+        border: 1px solid lighten($light-color, 20%);
+        border-radius: 8px;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1rem;
+        color: $text-color;
+        resize: vertical;
+        @include transition;
+
+        &:focus {
+          outline: none;
+          border-color: $primary-color;
+          box-shadow: 0 0 5px rgba($primary-color, 0.3);
+        }
+
+        &::placeholder {
+          color: $light-color;
+        }
+      }
+
+      .note-preview {
+        margin-top: 1rem;
+        padding: 1rem;
+        background-color: lighten($background-color, 2%);
+        border-radius: 8px;
+        color: $text-color;
+        font-size: 0.95rem;
+        line-height: 1.5;
+
+        strong {
+          color: $secondary-color;
+        }
+      }
+    }
+
+    .confirm-order-btn {
+      width: 100%;
+      padding: 1rem;
+      background-color: $primary-color;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      @include transition;
+
+      &:hover {
+        background-color: darken($primary-color, 10%);
+      }
+    }
+  }
+
+  .confirmation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    @include flex-center;
+    z-index: 1000;
+    padding: 1rem;
+
+    .confirmation-modal {
+      background-color: white;
+      border-radius: 15px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 100%;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+      .close-btn {
+        position: absolute;
+        top: 10px;
+        height: 30px;
+        right: 1rem;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: $light-color;
+        cursor: pointer;
+        @include transition;
+
+        &:hover {
+          color: $error-color;
+        }
+      }
+
+      .modal-content {
+        text-align: center;
+
+        .modal-icon {
+          color: $success-color;
+          font-size: 4rem;
+          margin-bottom: 1.5rem;
+        }
+
+        h2 {
+          color: $secondary-color;
+          margin-bottom: 1rem;
+        }
+
+        p {
+          color: $light-color;
+          margin-bottom: 1.5rem;
+          font-size: 1.1rem;
+        }
+
+        .modal-note {
+          margin-bottom: 1.5rem;
+          padding: 1rem;
+          background-color: lighten($background-color, 2%);
+          border-radius: 8px;
+          text-align: left;
+          font-size: 0.95rem;
+          line-height: 1.5;
+
+          strong {
+            color: $secondary-color;
+          }
+        }
+
+        .modal-actions {
+          display: flex;
+          gap: 1rem;
+
+          @media (max-width: 480px) {
+            flex-direction: column;
+          }
+
+          button {
+            flex: 1;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            @include transition;
+
+            &.cancel-btn {
+              background-color: transparent;
+              border: 2px solid $light-color;
+              color: $light-color;
+
+              &:hover {
+                background-color: $light-color;
+                color: white;
+              }
+            }
+
+            &.confirm-btn {
+              background-color: $success-color;
+              border: 2px solid $success-color;
+              color: white;
+
+              &:hover {
+                background-color: darken($success-color, 10%);
+                border-color: darken($success-color, 10%);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive dizayn
+@media screen and (max-width: 768px) {
+  .basket-page {
+    padding: 1.5rem 0;
+
+    .page-title {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .table-info {
+      max-width: 100%;
+    }
+
+    .basket-content {
+      gap: 1.5rem;
+    }
+
+    .basket-items {
+      .basket-item {
+        padding: 1rem;
+
+        .item-controls {
+          margin: 1rem 0;
+        }
+      }
+    }
+
+    .order-summary {
+      padding: 1.2rem;
+
+      h2 {
+        font-size: 1.3rem;
+      }
+
+      .order-note {
+        textarea {
+          min-height: 80px;
+        }
+      }
+    }
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .basket-page {
+    .basket-items {
+      .basket-item {
+        .item-controls {
+          flex-direction: column;
+          gap: 1rem;
+        }
+      }
+    }
+
+    .confirmation-overlay {
+      padding: 0.5rem;
+
+      .confirmation-modal {
+        padding: 1.5rem;
+
+        .modal-content {
+          .modal-icon {
+            font-size: 3rem;
+          }
+        }
+      }
+    }
+  }
+}
