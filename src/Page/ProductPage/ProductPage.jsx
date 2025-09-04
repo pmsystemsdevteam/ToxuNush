@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./ProductPage.scss";
 import axios from "axios";
 import { baseUrl } from "../../../BaseUrl";
@@ -72,8 +72,6 @@ function ProductPage() {
     try {
       const res = await axios.get(`${baseUrl}/api/categories/`);
       setCategory(res.data);
-      console.log("category", res.data);
-
     } catch (error) {
       console.error("Kateqoriyalar alınarkən xəta baş verdi:", error);
     }
@@ -95,26 +93,25 @@ function ProductPage() {
     setBasket(nextIds);
   };
 
-  // >>> Eyni məhsulu 2-ci dəfə klikləyəndə SAY ARTMIASIN (əgər varsa, heç nə etmir)
+  // Eyni məhsulu 2-ci dəfə klikləyəndə SAY ARTMIASIN
   const addToBasket = (product) => {
     setBasket((prev) => {
       if (prev.includes(product.id)) {
-        // artıq səbətdədir → dəyişiklik YOX
         return prev;
       }
       const next = [...prev, product.id];
       persistAndNotify(next);
       return next;
     });
-     toast("Səbətə əlavə edildi", {
-        icon: "🧺",
-        style: {
-          marginTop: "70px",
-          borderRadius: "12px",
-          height: "48px",
-          fontFamily: "Times New Roman, serif",
-        },
-      });
+    toast("Səbətə əlavə edildi", {
+      icon: "🧺",
+      style: {
+        marginTop: "70px",
+        borderRadius: "12px",
+        height: "48px",
+        fontFamily: "Times New Roman, serif",
+      },
+    });
   };
 
   const removeFromBasket = (productId) => {
@@ -130,10 +127,12 @@ function ProductPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Kateqoriya
+  // Kateqoriya seçimi
   const handleCategoryClick = (cat) => {
     setActiveCategory(cat);
     setCurrentPage(1);
+    // Karuseli başa sarmaq istəsən:
+    // trackRef.current?.scrollTo({ left: 0, behavior: "smooth" });
   };
 
   const filteredProducts =
@@ -174,74 +173,133 @@ function ProductPage() {
     return sum + (p ? p.cost : 0);
   }, 0);
 
+  // ===== KATEQORİYA KARUSELİ LOGİKASI =====
+  const trackRef = useRef(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  const updateScrollButtons = () => {
+    const el = trackRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setCanLeft(el.scrollLeft > 0);
+    setCanRight(el.scrollLeft < maxScroll - 1);
+  };
+
+  useEffect(() => {
+    // kateqoriyalar yüklənəndə/ölçü dəyişəndə düymə statuslarını yenilə
+    updateScrollButtons();
+    const el = trackRef.current;
+    const onScroll = () => updateScrollButtons();
+    el?.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", updateScrollButtons);
+    return () => {
+      el?.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", updateScrollButtons);
+    };
+  }, [category]);
+
+  const scrollByAmount = (dir = 1) => {
+    const el = trackRef.current;
+    if (!el) return;
+    const amount = Math.round(el.clientWidth * 0.85);
+    el.scrollBy({ left: dir * amount, behavior: "smooth" });
+  };
+
   return (
     <div className="product-page">
       <div className="container">
         <h1 className="page-title">Məhsullarımız</h1>
         <p className="page-subtitle">Ənənəvi ləzzətlərimizlə tanış olun</p>
 
-        {/* Kateqoriya filteri */}
+        {/* ===== KATEQORİYA KARUSELİ ===== */}
         <div className="category-filter">
           <button
-            className={`category-btn ${
-              activeCategory === "Hamısı" ? "active" : ""
-            }`}
-            onClick={() => handleCategoryClick("Hamısı")}
+            className={`scroll-btn left ${canLeft ? "" : "disabled"}`}
+            onClick={() => scrollByAmount(-1)}
+            disabled={!canLeft}
+            aria-label="Sol"
           >
-            Hamısı
+            <i className="fas fa-chevron-left"></i>
           </button>
-          {category && category.map((item) => (
+
+          <div className="category-track" ref={trackRef}>
             <button
-              key={item.id}
               className={`category-btn ${
-                activeCategory === item.id ? "active" : ""
+                activeCategory === "Hamısı" ? "active" : ""
               }`}
-              onClick={() => handleCategoryClick(item.id)}
+              onClick={() => handleCategoryClick("Hamısı")}
             >
-              {item.name_az}
+              Hamısı
             </button>
-          ))}
+
+            {category &&
+              category.map((item) => (
+                <button
+                  key={item.id}
+                  className={`category-btn ${
+                    activeCategory === item.id ? "active" : ""
+                  }`}
+                  onClick={() => handleCategoryClick(item.id)}
+                  title={item.name_az}
+                >
+                  {item.name_az}
+                </button>
+              ))}
+          </div>
+
+          <button
+            className={`scroll-btn right ${canRight ? "" : "disabled"}`}
+            onClick={() => scrollByAmount(1)}
+            disabled={!canRight}
+            aria-label="Sağ"
+          >
+            <i className="fas fa-chevron-right"></i>
+          </button>
         </div>
 
         {/* Məhsul kartları */}
         <div className="products-grid">
-          {currentProducts && currentProducts.map((product) => (
-            <div key={product.id} className="product-card">
-              <div className="product-image">
-                <img src={product.image} alt={product.name_az} />
+          {currentProducts &&
+            currentProducts.map((product) => (
+              <div key={product.id} className="product-card">
+                <div className="product-image">
+                  <img src={product.image} alt={product.name_az} />
 
-                {/* Vegan/Halal */}
-                <div className="product-tags">
-                  {product.vegan && <span className="tag vegan">Vegan</span>}
-                  {product.halal && <span className="tag halal">Halal</span>}
+                  {/* Vegan/Halal */}
+                  <div className="product-tags">
+                    {product.vegan && <span className="tag vegan">Vegan</span>}
+                    {product.halal && <span className="tag halal">Halal</span>}
+                  </div>
+
+                  {/* Səbətə əlavə et */}
+                  <button
+                    className="add-to-basket-btn"
+                    onClick={() => addToBasket(product)}
+                  >
+                    <i className="fas fa-shopping-basket"></i>
+                    Səbətə əlavə et
+                  </button>
                 </div>
 
-                {/* Səbətə əlavə et */}
-                <button
-                  className="add-to-basket-btn"
-                  onClick={() => addToBasket(product)}
-                >
-                  <i className="fas fa-shopping-basket"></i>
-                  Səbətə əlavə et
-                </button>
-              </div>
+                <div className="product-info">
+                  <h3 className="product-name">{product.name_az}</h3>
+                  <p className="product-description">
+                    {product.description_az}
+                  </p>
+                  <div className="product-price">{product.cost} AZN</div>
 
-              <div className="product-info">
-                <h3 className="product-name">{product.name_az}</h3>
-                <p className="product-description">{product.description_az}</p>
-                <div className="product-price">{product.cost} AZN</div>
-
-                {/* Əlavə et və səbətə keç */}
-                <button
-                  className="go-to-basket-btn"
-                  onClick={() => addAndGo(product)}
-                >
-                  Səbətə əlavə et
-                  <i className="fas fa-arrow-right"></i>
-                </button>
+                  {/* Əlavə et və yuxarı qaldır */}
+                  <button
+                    className="go-to-basket-btn"
+                    onClick={() => addAndGo(product)}
+                  >
+                    Səbətə əlavə et
+                    <i className="fas fa-arrow-right"></i>
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
 
         {/* Pagination */}
@@ -286,12 +344,6 @@ function ProductPage() {
             </button>
           </div>
         )}
-
-        {/* (Opsional) alt info */}
-        {/* <div className="basket-summary">
-          <span>Ümumi say: {totalCount}</span>
-          <span>Ümumi məbləğ: {totalAmount} AZN</span>
-        </div> */}
       </div>
     </div>
   );

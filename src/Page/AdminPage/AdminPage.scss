@@ -1,0 +1,282 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css");
+
+// Dəyişənlər
+$primary-color: #2c3e50;
+$secondary-color: #3498db;
+$masalar-color: #3498db;
+$kabinetler-color: #2c3e50;
+$hotel-color: #407cb9;
+$text-color: #333;
+$light-bg: #f8f9fa;
+
+// Ümumi stil
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+}
+
+.admin-containerr {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  margin-top: 60px;
+}
+
+.admin-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  width: 100%;
+  
+  .admin-title {
+    color: $primary-color;
+    font-size: 2.8rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    display: inline-block;
+    
+    &::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      width: 100px;
+      height: 4px;
+      border-radius: 2px;
+    }
+  }
+  
+  .admin-subtitle {
+    color: lighten($text-color, 20%);
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+}
+
+.boxes-container {
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  width: 100%;
+}
+
+.box {
+  width: 320px;
+  height: 280px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    backdrop-filter: blur(5px);
+    z-index: 1;
+  }
+  
+  &:hover {
+    transform: translateY(-15px) scale(1.03);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    
+    .box-hover-effect {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+    
+    .box-icon {
+      transform: scale(1.1) translateY(-10px);
+    }
+  }
+  
+  .box-icon {
+    font-size: 3.5rem;
+    color: white;
+    margin-bottom: 1.5rem;
+    transition: all 0.4s ease;
+    position: relative;
+    z-index: 2;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  .box-content {
+    position: relative;
+    z-index: 2;
+    color: white;
+    text-align: center;
+    padding: 0 20px;
+    
+    h2 {
+      font-size: 2.2rem;
+      margin-bottom: 0.8rem;
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+      font-weight: 600;
+    }
+    
+    p {
+      font-size: 1rem;
+      opacity: 0.9;
+      line-height: 1.5;
+    }
+  }
+  
+  .box-hover-effect {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+    opacity: 0;
+    transition: all 0.5s ease;
+    z-index: 1;
+  }
+}
+
+.masalar-box {
+  background: linear-gradient(135deg, $masalar-color, darken($masalar-color, 15%));
+}
+
+.kabinetler-box {
+  background: linear-gradient(135deg, $kabinetler-color, darken($kabinetler-color, 10%));
+}
+
+.hotel-box {
+  background: linear-gradient(135deg, $hotel-color, darken($hotel-color, 15%));
+}
+
+// Responsive dizayn
+@media (max-width: 1100px) {
+  .boxes-container {
+    gap: 2rem;
+  }
+  
+  .box {
+    width: 280px;
+    height: 250px;
+  }
+}
+
+@media (max-width: 900px) {
+  .boxes-container {
+    gap: 1.5rem;
+  }
+  
+  .box {
+    width: 250px;
+    height: 230px;
+    
+    .box-icon {
+      font-size: 3rem;
+    }
+    
+    .box-content h2 {
+      font-size: 2rem;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 1.5rem;
+  }
+  
+  .admin-header {
+    margin-bottom: 2rem;
+    
+    .admin-title {
+      font-size: 2.2rem;
+    }
+    
+    .admin-subtitle {
+      font-size: 1rem;
+      padding: 0 1rem;
+    }
+  }
+  
+  .boxes-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.8rem;
+  }
+  
+  .box {
+    width: 100%;
+    max-width: 400px;
+    height: 200px;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 0 2rem;
+    
+    .box-icon {
+      margin-bottom: 0;
+      margin-right: 1.5rem;
+      font-size: 2.5rem;
+    }
+    
+    .box-content {
+      text-align: left;
+      padding: 0;
+      
+      h2 {
+        font-size: 1.8rem;
+      }
+      
+      p {
+        font-size: 0.9rem;
+      }
+    }
+    
+    &:hover .box-icon {
+      transform: scale(1.1) translateX(-5px);
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-header .admin-title {
+    font-size: 1.8rem;
+  }
+  
+  .box {
+    height: 180px;
+    padding: 0 1.5rem;
+    
+    .box-icon {
+      font-size: 2rem;
+      margin-right: 1rem;
+    }
+    
+    .box-content h2 {
+      font-size: 1.5rem;
+    }
+  }
+}

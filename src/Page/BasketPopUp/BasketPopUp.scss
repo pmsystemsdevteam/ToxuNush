@@ -9,7 +9,7 @@
 /* Sağ-yuxarı sabit səbət qutusu */
 .basket-box {
   position: fixed;
-  top: 150px;
+  bottom: 100px;
   right: calc(16px + env(safe-area-inset-right));
   z-index: 1100;
 
@@ -81,7 +81,7 @@
     width: 52px;
     height: 52px;
     right: calc(14px + env(safe-area-inset-right));
-     top: 100px;
+     bottom: 50px;
 
     i { font-size: 20px; }
   }

@@ -1,0 +1,187 @@
+.order-room-page {
+  padding: 2rem;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .container {
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
+    background: white;
+    padding: 2.5rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  h1 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    font-size: 28px;
+
+    .fas {
+      margin-right: 10px;
+      color: #3498db;
+    }
+  }
+
+  p {
+    color: #7f8c8d;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 16px;
+  }
+
+  .order-form {
+    .form-group {
+      margin-bottom: 1.5rem;
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #34495e;
+      }
+
+      input, select {
+        width: 100%;
+        padding: 14px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.3s;
+
+        &:focus {
+          outline: none;
+          border-color: #3498db;
+          box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        &::placeholder {
+          color: #bbb;
+        }
+      }
+
+      // Native select wrapper (indi MUI istifadə etdiyimiz üçün dekorativdir)
+      .select-wrapper {
+        position: relative;
+
+        &::after {
+          content: "▼";
+          font-size: 12px;
+          position: absolute;
+          right: 15px;
+          top: 50%;
+          transform: translateY(-50%);
+          pointer-events: none;
+          color: #7f8c8d;
+        }
+
+        select {
+          appearance: none;
+          background-color: white;
+          max-height: 200px;
+          overflow-y: auto;
+        }
+      }
+
+      // MUI Select genişlik/yerləşmə
+      .mui-select {
+        .MuiFormControl-root {
+          width: 100%;
+        }
+      }
+    }
+
+    .form-actions {
+      margin-top: 2rem;
+
+      button {
+        width: 100%;
+        padding: 16px;
+        border: none;
+        border-radius: 8px;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+
+        &.btn-confirm {
+          background-color: #2ecc71;
+          color: white;
+
+          &.active:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+          }
+        }
+
+        &.disabled {
+          background-color: #bdc3c7;
+          cursor: not-allowed;
+          opacity: 0.7;
+        }
+      }
+    }
+  }
+
+  .info-box {
+    background: #f8f9fa;
+    border-left: 4px solid #3498db;
+    padding: 15px;
+    margin-top: 25px;
+    border-radius: 4px;
+
+    h3 {
+      color: #2c3e50;
+      margin-bottom: 10px;
+      font-size: 18px;
+
+      .fas {
+        margin-right: 8px;
+        color: #3498db;
+      }
+    }
+
+    p {
+      color: #7f8c8d;
+      text-align: left;
+      margin-bottom: 0;
+      line-height: 1.5;
+    }
+  }
+}
+
+// Responsive dizayn
+@media (max-width: 768px) {
+  .order-room-page {
+    padding: 1rem;
+
+    .container {
+      padding: 1.5rem;
+    }
+
+    h1 {
+      font-size: 24px;
+    }
+
+    .form-group {
+      input, select {
+        padding: 12px;
+      }
+    }
+
+    .form-actions {
+      button {
+        padding: 14px;
+      }
+    }
+  }
+}
+.css-1tktgsa-MuiPaper-root-MuiPopover-paper-MuiMenu-paper{
+  width: 200px !important;
+}

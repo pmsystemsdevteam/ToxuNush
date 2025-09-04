@@ -10,24 +10,39 @@ function Dashboard() {
   const menuItems = [
     {
       id: 1,
-      name: "Masalar",
+      name: "İdarə etmə sistemi",
       icon: "fas fa-table",
       component: "Tables",
       path: "/admin",
     },
     {
       id: 2,
+      name: "Əlavə etmə sistemi",
+      icon: "fa-solid fa-chair",
+      component: "Masa & Kabinet əlavə etmə",
+      path: "/admin/add",
+    },
+
+    {
+      id: 8,
+      name: "Rezervasiyalar",
+      icon: "fa-solid fa-list-ol",
+      component: "Rezervasiyalar",
+      path: "/admin/rezerv",
+    },
+    {
+      id: 5,
+      name: "Sifarişlər",
+      icon: "fa-solid fa-bell-concierge",
+      component: "Products",
+      path: "/admin/all",
+    },
+    {
+      id: 3,
       name: "Məhsullar",
       icon: "fas fa-utensils",
       component: "Products",
       path: "/admin/product",
-    },
-    {
-      id: 3,
-      name: "Məhsul əlavə etmə",
-      icon: "fas fa-plus-circle",
-      component: "AddProduct",
-      path: "/admin/product/add",
     },
     {
       id: 4,
@@ -37,14 +52,15 @@ function Dashboard() {
       path: "/admin/category",
     },
     {
-      id: 5,
-      name: "Kataqoriya əlavə etmə",
-      icon: "fa-solid fa-plus",
-      component: "AddProduct",
-      path: "/admin/category/add",
+      id: 4,
+      name: "Saatlar",
+      icon: "fa-solid fa-clock",
+      component: "Saatlar",
+      path: "/admin/time",
     },
+
     {
-      id: 6,
+      id: 9,
       name: "Arxitektura",
       icon: "fas fa-layer-group",
       component: "Architecture",
@@ -81,7 +97,7 @@ function Dashboard() {
 
         <ul className="sidebar-menu">
           {menuItems.map((item) => (
-            <NavLink to={`${item.path}`} className="link" >
+            <NavLink to={`${item.path}`} className="link">
               <li
                 key={item.id}
                 className={activePage === item.name ? "active" : ""}

@@ -119,8 +119,8 @@ function AdminAddPage() {
   const catLabel = (c) => c.name_az || c.name || c.title || `Kateqoriya #${c.id}`;
 
   return (
-    <div className="admin-add-page">
-      <div className="admin-container">
+    <div className="admin-add-page1">
+      <div className="admin-container1">
         <h1 className="admin-title">Yeni Məhsul Əlavə Et</h1>
 
         {errorMsg && <div className="error">{errorMsg}</div>}

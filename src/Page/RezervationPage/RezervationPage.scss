@@ -1,0 +1,217 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+// Dəyişənlər
+$primary-color: #abc7da;
+$secondary-color: #764ba2;
+$masa-color-1: #abc7da;
+$masa-color-2: #abc7da;
+$kabinet-color-1: #34495e;
+$kabinet-color-2: #34495e;
+$text-color: white;
+$shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+$hover-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+
+// Əsas stil
+.rezervation-page {
+  min-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Poppins", sans-serif;
+  padding: 20px;
+}
+
+.rezervation-container {
+  width: 100%;
+  max-width: 1200px;
+  text-align: center;
+}
+
+.page-title {
+  color: $text-color;
+  font-size: 2.5rem;
+  margin-bottom: 3rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  font-weight: 600;
+
+  @media (max-width: 768px) {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.7rem;
+  }
+}
+
+.boxes-container {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  flex-wrap: wrap;
+
+  @media (max-width: 992px) {
+    gap: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+  }
+}
+
+.reservation-box {
+  width: 370px;
+  height: 320px;
+  border-radius: 15px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: $shadow;
+  text-decoration: none;
+  transition: all 0.4s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(-100%) skewX(-15deg);
+    transition: all 0.5s ease;
+  }
+
+  &:hover,
+  &.active {
+    transform: translateY(-10px) scale(1.03);
+    box-shadow: $hover-shadow;
+
+    &::before {
+      transform: translateX(100%) skewX(-15deg);
+    }
+
+    .box-content {
+      h2 {
+        transform: translateY(-2px);
+      }
+    }
+
+    .box-hover-effect {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .box-arrow {
+      opacity: 1;
+      transform: translateX(10px);
+    }
+  }
+
+  @media (max-width: 992px) {
+    width: 320px;
+    height: 250px !important;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    max-width: 400px;
+    height: 200px;
+  }
+
+  @media (max-width: 480px) {
+    height: 180px;
+  }
+}
+
+.box-content {
+  color: $text-color;
+  text-align: center;
+  padding: 30px;
+  z-index: 2;
+  position: relative;
+
+  h2 {
+    font-size: 30px !important;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
+    transition: all 0.3s ease;
+
+    @media (max-width: 768px) {
+    font-size: 27px !important;
+
+    }
+
+    @media (max-width: 480px) {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    line-height: 1.5;
+
+    @media (max-width: 768px) {
+      font-size: 1rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 20px;
+  }
+}
+
+.box-hover-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  width: 80%;
+  height: 80%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  opacity: 0;
+  transition: all 0.4s ease;
+}
+
+.box-arrow {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  font-size: 1.5rem;
+  opacity: 0;
+  transition: all 0.3s ease;
+  color: $text-color;
+}
+
+.masa-box {
+  background: linear-gradient(45deg, $masa-color-1, $masa-color-2);
+}
+
+.kabinet-box {
+  background: linear-gradient(45deg, $kabinet-color-1, $kabinet-color-2);
+}
+
+// Ripple effekti üçün stil
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}

@@ -1,0 +1,96 @@
+// AdminTableAllOrderPage.scss
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css");
+
+.admin-table-order-page {
+  padding: 24px;
+  margin-top: 60px;
+  margin-left: 90px;
+  * {
+    font-family: "Poppins", sans-serif !important;
+  }
+
+  .page-title {
+    margin-bottom: 24px;
+    color: #333;
+    font-family: "Poppins", sans-serif !important;
+    font-weight: 600;
+  }
+
+  .search-paper {
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+
+  .tabs-paper {
+    padding: 16px;
+    font-family: "Poppins", sans-serif !important;
+
+    .MuiTabs-root {
+      border-bottom: 1px solid #e0e0e0;
+    }
+  }
+
+  .table-card {
+    height: 100%;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    font-family: "Poppins", sans-serif !important;
+    width: 400px;
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .created-date {
+      font-size: 0.8rem;
+      color: #757575;
+    }
+
+    .reservation-item {
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+  }
+
+  .order-accordion {
+    margin-bottom: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-family: "Poppins", sans-serif !important;
+
+    &:before {
+      display: none;
+    }
+
+    .MuiAccordionSummary-content {
+      align-items: center;
+    }
+  }
+
+  .MuiTableRow-root {
+    transition: background-color 0.2s;
+    font-family: "Poppins", sans-serif !important;
+
+    &:hover {
+      background-color: #f5f5f5;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px;
+
+    .page-title {
+      font-size: 1.8rem;
+    }
+
+    .table-card {
+      .MuiCardContent-root {
+        padding: 12px;
+      }
+    }
+  }
+}

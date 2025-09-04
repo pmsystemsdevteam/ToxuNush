@@ -1,0 +1,553 @@
+.admin-room-page {
+  padding: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+
+  .header-row {
+    max-width: 1200px;
+    margin: 0 auto 20px auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    h1 {
+      margin: 0;
+      color: #2c3e50;
+      font-size: 2.2rem;
+      font-weight: 600;
+    }
+
+    .header-actions button {
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: #111827;
+      border-radius: 8px;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      &:hover {
+        background: #f3f4f6;
+      }
+      &:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+    }
+  }
+}
+
+/* Grid */
+.rooms-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.room-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    .room-shape {
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+    }
+  }
+}
+
+/* KVADRAT otaq görüntüsü */
+.room-shape {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  border-radius: 16px; /* kvadrat yumru künclü */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: 800;
+  font-size: 26px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+  transition: all 0.25s ease;
+
+  /* rezerv başlamasına 5 dəqiqə qalanda dalğa/parlama effekti */
+  &.starting-soon::before {
+    content: "";
+    position: absolute;
+    inset: -10px;
+    border-radius: 20px;
+    background: radial-gradient(
+      closest-side,
+      rgba(255, 238, 88, 0.45),
+      rgba(255, 238, 88, 0) 70%
+    );
+    animation: wave 1.5s infinite ease-in-out;
+    z-index: 0;
+  }
+
+  /* aktiv rezerv vaxtında güclü vurğulama */
+  &.active-now::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 18px;
+    border: 3px solid rgba(255, 255, 255, 0.95);
+    animation: pulse 1.2s infinite ease-out;
+  }
+}
+
+@keyframes wave {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.08);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.96);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(1.1);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.1);
+    opacity: 0;
+  }
+}
+
+.room-number {
+  z-index: 2;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* chairs (istəsən çıxara bilərsən) */
+.chair {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  background-color: #8b4513;
+  border-radius: 50%;
+  border: 2px solid #654321;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+  &.chair-top {
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  &.chair-right {
+    right: -18px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  &.chair-bottom {
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  &.chair-left {
+    left: -18px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
+/* Popup */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.25s ease;
+  padding: 16px;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.room-popup {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  width: min(900px, 96vw);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  animation: slideUp 0.25s ease;
+}
+.popup-title {
+  margin: 4px 32px 6px 8px;
+  color: #2c3e50;
+  text-align: center;
+  font-size: 1.6rem;
+}
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #7f8c8d;
+  transition: color 0.2s;
+  height: 30px;
+  width: 30px;
+  border-radius: 8px;
+  &:hover {
+    color: #e74c3c;
+    background: #f3f4f6;
+  }
+}
+
+/* SCROLL edən bədən hissəsi */
+.popup-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding-right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.status-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+
+  .status-color {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    margin-right: 10px;
+    border: 1px solid #ddd;
+  }
+  span {
+    font-weight: 600;
+    color: #2c3e50;
+  }
+}
+
+.full-info {
+  background: #f7f9fc;
+  border: 1px solid #e6eef7;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px dashed #e5e7eb;
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+  .info-label {
+    color: #6b7280;
+  }
+  .info-value {
+    color: #1f2937;
+    font-weight: 600;
+  }
+}
+
+/* Rezerv siyahısı */
+.reservations-box {
+  background: #ffffff;
+  border: 1px solid #e6eef7;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+
+  .box-head {
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+  }
+  .resv-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .resv-pill {
+    background: #ffeeee;
+    border: 1px solid #ffcfcf;
+    color: red;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    .date {
+      margin-right: 6px;
+    }
+    .time {
+      margin-right: 6px;
+    }
+    .cust {
+      color: #475569;
+      font-weight: 600;
+    }
+  }
+
+  .resv-empty {
+    color: #64748b;
+    font-weight: 600;
+  }
+}
+
+/* Rezerv formu */
+.reservation-form {
+  background: #fff;
+  border: 1px solid #e6eef7;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      label {
+        margin-bottom: 6px;
+        color: #34495e;
+        font-weight: 600;
+      }
+      input {
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        &:focus {
+          outline: none;
+          border-color: #3498db;
+          box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+      }
+    }
+    .form-group:nth-child(4),
+    .form-group:nth-child(5) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .form-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      &.secondary {
+        background: #ecf0f1;
+        color: #2c3e50;
+      }
+      &:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+    }
+  }
+}
+
+/* Status düymələri */
+.status-controls {
+  margin-bottom: 16px;
+
+  h3 {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+    font-size: 1.1rem;
+  }
+
+  .status-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+
+    button {
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #ecf0f1;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+      color: #2c3e50;
+
+      &:hover {
+        background: #dfe6e9;
+      }
+      &.active {
+        background: #3498db;
+        color: white;
+        font-weight: 700;
+      }
+      &:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+    }
+  }
+}
+
+/* Legend və Notification */
+.legend {
+  background: white;
+  padding: 22px;
+  border-radius: 12px;
+  max-width: 1000px;
+  margin: 0 auto 20px auto;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  h2 {
+    margin: 0 0 14px 0;
+    color: #2c3e50;
+    text-align: center;
+    font-size: 1.4rem;
+  }
+}
+.legend-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, auto));
+  gap: 12px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  .color-box {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    margin-right: 12px;
+    border: 1px solid #ddd;
+  }
+  span {
+    font-size: 15px;
+    color: #34495e;
+    font-weight: 600;
+  }
+}
+.notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #4caf50;
+  color: white;
+  padding: 14px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  animation: slideIn 0.25s ease;
+  z-index: 1001;
+  &.error {
+    background-color: #ef4444;
+  }
+  &.info {
+    background-color: #3498db;
+  }
+  &.success {
+    background-color: #10b981;
+  }
+}
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Empty state */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #6b7280;
+  font-weight: 600;
+  padding: 20px 0;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .rooms-container {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  .room-wrapper {
+    height: 180px;
+  }
+  .room-shape {
+    width: 120px;
+    height: 120px;
+    font-size: 24px;
+  }
+}
+@media (max-width: 600px) {
+  .rooms-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .room-wrapper {
+    height: 160px;
+  }
+  .room-shape {
+    width: 110px;
+    height: 110px;
+    font-size: 22px;
+  }
+}

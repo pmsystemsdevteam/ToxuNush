@@ -4,9 +4,16 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 
 const TABLES_URL = "https://api.albanproject.az/api/tables/";
-const TABLE_NUM_KEY = "tableNumber";
 
+// Yeni açarlar
+const TABLE_KEY = "table";           // t üçün
+const ROOM_KEY = "room";             // r üçün
+const ACTIVE_CTX_KEY = "activeContext"; // 't' | 'r'
+
+// Köhnə səbət açarı (səndə mövcud idi)
 const BASKET_KEY = "basket";
+
+// Köməkçi: səbət sayını oxu
 const readBasket = () => {
   try {
     const arr = JSON.parse(localStorage.getItem(BASKET_KEY) || "[]");
@@ -16,16 +23,40 @@ const readBasket = () => {
   }
 };
 
+// Köməkçi: masa nömrəsini oxu (yalnız yeni açardan)
 const readTableNumber = () => {
-  const v = localStorage.getItem(TABLE_NUM_KEY);
+  const v = localStorage.getItem(TABLE_KEY);
   const n = Number(v);
   return Number.isInteger(n) && n > 0 ? n : null;
+};
+
+// Köməkçi: otaq nömrəsini oxu (yalnız yeni açardan)
+const readRoomNumber = () => {
+  const v = localStorage.getItem(ROOM_KEY);
+  const n = Number(v);
+  return Number.isInteger(n) && n > 0 ? n : null;
+};
+
+// Aktiv kontekstdən asılı olaraq loqo hara yönlənsin:
+// 't' → `/4t`, 'r' → `/12r`, heç nə → `/`
+const computeLogoTarget = () => {
+  const active = (localStorage.getItem(ACTIVE_CTX_KEY) || "").toLowerCase();
+  if (active === "table") {
+    const n = readTableNumber();
+    if (n) return `/${n}t`;
+  }
+  if (active === "room") {
+    const n = readRoomNumber();
+    if (n) return `/${n}r`;
+  }
+  return "/";
 };
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [basketCount, setBasketCount] = useState(0);
-  const [reservedLock, setReservedLock] = useState(false); // yalnız seçilmiş masa üçün
+  const [reservedLock, setReservedLock] = useState(false); // seçilmiş masa reserved-dirsə
+  const [logoTo, setLogoTo] = useState(computeLogoTarget());
 
   // Səbət sayını izləyir
   useEffect(() => {
@@ -49,7 +80,28 @@ function Navbar() {
     };
   }, []);
 
-  // Seçilmiş masanın reserved olub-olmadığını yoxlayır
+  // Loqo hədəfini LS dəyişikliklərinə reaktiv saxla
+  useEffect(() => {
+    const recalc = () => setLogoTo(computeLogoTarget());
+
+    const onStorage = (e) => {
+      if ([TABLE_KEY, ROOM_KEY, ACTIVE_CTX_KEY].includes(e.key)) {
+        recalc();
+      }
+    };
+    const onCtxChanged = () => recalc();
+
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("ctx_changed", onCtxChanged);
+    recalc(); // mount zamanı
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("ctx_changed", onCtxChanged);
+    };
+  }, []);
+
+  // Seçilmiş masanın reserved olub-olmadığını yoxla (yalnız masa kontekstində məntiqlidir)
   useEffect(() => {
     let timer;
     const checkReserved = async () => {
@@ -67,15 +119,15 @@ function Navbar() {
         setReservedLock(status === "reserved");
       } catch (e) {
         console.error("Navbar tables check failed:", e);
-        setReservedLock(false); // xəta halında kilid tətbiq etmirik
+        setReservedLock(false);
       }
     };
 
     checkReserved();
 
-    // tableNumber dəyişərsə yenidən yoxla
+    // table dəyişərsə yenidən yoxla
     const onStorage = (e) => {
-      if (e.key === TABLE_NUM_KEY) checkReserved();
+      if (e.key === TABLE_KEY) checkReserved();
     };
     window.addEventListener("storage", onStorage);
 
@@ -102,7 +154,8 @@ function Navbar() {
         className="nav-container"
         style={{ justifyContent: reservedLock ? "center" : "space-between" }}
       >
-        <Link to={"/"} className="nav-logo-link">
+        {/* LOQO: aktiv kontekstə yönləndirir (məs: /4t, /12r). Yoxdursa “/” */}
+        <Link to={logoTo} className="nav-logo-link">
           <div className="nav-logo">
             {reservedLock ? (
               // reserved: yalnız mətn loqo
@@ -121,7 +174,7 @@ function Navbar() {
           <>
             <ul className="nav-menu">
               <li className="nav-item">
-                <Link to={"/"} className="nav-link">Ana Səhifə</Link>
+                <Link to={logoTo} className="nav-link">Ana Səhifə</Link>
               </li>
               <li className="nav-item">
                 <Link to={"/product"} className="nav-link">Məhsullar</Link>

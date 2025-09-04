@@ -1,145 +1,222 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import "./AdminTablePage.scss";
 
 const TABLES_URL = "https://api.albanproject.az/api/tables/";
 const BASKETS_URL = "https://api.albanproject.az/api/baskets/";
+const RESERVATIONS_URL = "https://api.albanproject.az/api/reservations/";
+const SOON_THRESHOLD_MIN = 5; // başlanğıca qalan dəqiqə (vizual dalğa/animasiya)
+
+/* ================= Utils ================= */
+const pad2 = (n) => String(n).padStart(2, "0");
+const toAzDate = (isoOrYmd) => {
+  try {
+    const d = isoOrYmd?.includes?.("T")
+      ? new Date(isoOrYmd)
+      : new Date(`${isoOrYmd}T00:00:00`);
+    return d.toLocaleDateString("az-Latn-AZ");
+  } catch {
+    return isoOrYmd || "—";
+  }
+};
+const toAzDateTime = (iso) => {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString("az-Latn-AZ", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return iso || "—";
+  }
+};
+const todayYMD = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+};
+const parseTimeRange = (range) => {
+  // "HH:MM-HH:MM" -> {startMin,endMin} else null
+  const s = String(range || "");
+  const parts = s.split("-");
+  if (parts.length !== 2) return null;
+  const [sh, sm] = parts[0].split(":").map((x) => parseInt(x, 10));
+  const [eh, em] = parts[1].split(":").map((x) => parseInt(x, 10));
+  if ([sh, sm, eh, em].some((v) => Number.isNaN(v))) return null;
+  return { startMin: sh * 60 + sm, endMin: eh * 60 + em };
+};
+const nowMinutes = () => {
+  const d = new Date();
+  return d.getHours() * 60 + d.getMinutes();
+};
+const hhmm = (hhmmss) => {
+  if (!hhmmss) return "";
+  const parts = String(hhmmss).split(":");
+  if (parts.length >= 2)
+    return `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}`;
+  return hhmmss;
+};
+const toYMDfromISO = (iso) => {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+};
+
+/* ================= Status maps (server <-> UI) ================= */
+const normalizeStatus = (raw) => {
+  if (!raw) return "empty";
+  if (raw === "occupied" || raw === "served") return "ordered"; // köhnə uyğunluq
+  if (raw === "waitingWaite") return "waitingWaiter"; // yazılış xətası üçün uyğunluq
+  const allowed = [
+    "empty",
+    "reserved",
+    "ordered",
+    "waitingFood",
+    "waitingWaiter",
+    "waitingBill",
+  ];
+  return allowed.includes(raw) ? raw : "empty";
+};
+const statusToServer = (ui) => {
+  const map = {
+    empty: "empty",
+    reserved: "reserved",
+    ordered: "ordered",
+    waitingFood: "waitingFood",
+    waitingWaiter: "waitingWaiter",
+    waitingBill: "waitingBill",
+  };
+  return map[ui] || "empty";
+};
+const statusNames = {
+  empty: "Boş",
+  reserved: "Rezerv",
+  ordered: "Sifariş",
+  waitingFood: "Yemək Gözləyir",
+  waitingWaiter: "Ofisiant Gözləyir",
+  waitingBill: "Hesab Gözləyir",
+};
+const statusColors = {
+  empty: "#CCCCCC",
+  reserved: "#ee0d0dff",
+  ordered: "#4CAF50",
+  waitingFood: "#f38722ff",
+  waitingWaiter: "#FFEB3B",
+  waitingBill: "#3bd5ffff",
+};
 
 function AdminTablePage() {
-  const statusColors = {
-    empty: "#CCCCCC",
-    reserved: "#ee0d0dff",
-    ordered: "#4CAF50",
-    waitingFood: "#f38722ff",
-    waitingWaiter: "#FFEB3B",
-  };
-
-  const statusNames = {
-    empty: "Boş",
-    reserved: "Rezerv Edilmiş",
-    ordered: "Sifariş Verildi",
-    waitingFood: "Yemək Gözləyir",
-    waitingWaiter: "Ofisiant Gözləyir",
-  };
-
-  const statusFromServer = (s) => {
-    if (!s) return "empty";
-    if (s === "waitingWaite") return "waitingWaiter";
-    if (s === "occupied" || s === "served") return "ordered";
-    const allowed = ["empty", "reserved", "ordered", "waitingFood", "waitingWaiter"];
-    return allowed.includes(s) ? s : "empty";
-  };
-
-  const statusToServer = (s) => {
-    if (s === "waitingWaiter") return "waitingWaite";
-    if (s === "ordered") return "ordered";
-    if (s === "empty") return "empty";
-    if (s === "reserved") return "reserved";
-    if (s === "waitingFood") return "waitingFood";
-    return "empty";
-  };
-
   const [tables, setTables] = useState([]);
-  const [selectedTableId, setSelectedTableId] = useState(null);
-  const [selectedTable, setSelectedTable] = useState(null);
-  const [notification, setNotification] = useState({ show: false, message: "", type: "info" });
-  const [loading, setLoading] = useState(false);
-  const [syncingId, setSyncingId] = useState(null);
-  const [reserveAt, setReserveAt] = useState(""); // HH:MM
-
-  // NEW: bütün basketlər (popup üçün istifadə ediləcək)
   const [allBaskets, setAllBaskets] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "info",
+  });
+
+  const [selectedId, setSelectedId] = useState(null); // backend table id
+  const selectedTable = useMemo(
+    () => tables.find((t) => t.id === selectedId) || null,
+    [tables, selectedId]
+  );
+
+  // Rezerv formu (manual rezerv yaratmaq üçün)
+  const [resvDate, setResvDate] = useState(todayYMD());
+  const [resvStart, setResvStart] = useState(""); // "HH:MM"
+  const [resvEnd, setResvEnd] = useState(""); // "HH:MM"
+  const [resvCustomer, setResvCustomer] = useState("");
+  const [resvPhone, setResvPhone] = useState("");
+
+  // canlı vaxt indikasiya (15s)
+  const [nowTick, setNowTick] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNowTick(Date.now()), 15000);
+    return () => clearInterval(t);
+  }, []);
+
+  const [syncingId, setSyncingId] = useState(null);
+
   const [showOrdersPopup, setShowOrdersPopup] = useState(false);
   const [ordersForTable, setOrdersForTable] = useState([]);
 
-  useEffect(() => {
-    if (selectedTableId != null) {
-      const t = tables.find((x) => x.id === selectedTableId) || null;
-      setSelectedTable(t);
-      if (t?.status === "reserved" && t?.orderTime) {
-        const mm = /^([0-2]\d:[0-5]\d)$/.exec(t.orderTime);
-        setReserveAt(mm ? mm[1] : "");
-      } else {
-        setReserveAt("");
+  // Auto PATCH/POST-ları spam etməmək üçün qoruyucu (per table, per status)
+  const autoOpsRef = useRef({}); // { [tableId]: { lastStatus: 'reserved'|'empty', ts: number } }
+
+  const showNote = (message, type = "info") => {
+    setNotification({ show: true, message, type });
+    setTimeout(
+      () => setNotification({ show: false, message: "", type: "info" }),
+      2800
+    );
+  };
+
+  const buildTablesModel = (tablesApi, basketsApi) => {
+    // son basket total-ı
+    const latestBasketByTable = new Map();
+    for (const b of basketsApi || []) {
+      const tid = b?.table?.id;
+      if (!tid) continue;
+      const exist = latestBasketByTable.get(tid);
+      if (!exist || new Date(b.created_at) > new Date(exist.created_at)) {
+        latestBasketByTable.set(tid, b);
       }
-    } else {
-      setSelectedTable(null);
-      setReserveAt("");
     }
-  }, [selectedTableId, tables]);
 
-  const safeNumber = (n) => {
-    const v = typeof n === "string" ? parseFloat(n) : Number(n);
-    return Number.isFinite(v) ? v : 0;
-  };
+    const today = todayYMD();
 
-  const to2 = (n) => Number(n || 0).toFixed(2);
+    return (tablesApi || [])
+      .map((t) => {
+        const status = normalizeStatus(t.status);
+        const res = Array.isArray(t.reservations) ? t.reservations.slice() : [];
 
-  const formatTime = (iso) => {
-    try {
-      const d = new Date(iso);
-      return d.toLocaleTimeString("az-Latn-AZ", { hour: "2-digit", minute: "2-digit" });
-    } catch {
-      return null;
-    }
-  };
+        // gələcək ən yaxın rezerv label (lazım olsa istifadə edərik)
+        const futureRes = res
+          .filter((r) => r.date >= today)
+          .sort((a, b) =>
+            a.date === b.date
+              ? (parseTimeRange(a.reserved_time)?.startMin || 0) -
+                (parseTimeRange(b.reserved_time)?.startMin || 0)
+              : a.date.localeCompare(b.date)
+          );
+        const nextLabel = futureRes[0]
+          ? `${
+              futureRes[0].date === today
+                ? "Bu gün"
+                : toAzDate(futureRes[0].date)
+            } ${futureRes[0].reserved_time}`
+          : "";
 
-  const formatDateTime = (iso) => {
-    try {
-      const d = new Date(iso);
-      return d.toLocaleString("az-Latn-AZ", {
-        day: "2-digit",
-        month: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return iso ?? "";
-    }
-  };
+        const lastB = latestBasketByTable.get(t.id);
+        const lastTotal = lastB ? Number(lastB.total_cost || 0) : 0;
 
-  const parseReservedTimeFromNote = (note) => {
-    if (!note) return null;
-    const m = /Rezerv vaxtı:\s*([0-2]\d:[0-5]\d)/i.exec(note);
-    return m ? m[1] : null;
+        return {
+          id: t.id,
+          number: t.table_num,
+          status,
+          color: statusColors[status] || "#ccc",
+          chairNumber: t.chair_number ?? null,
+          created_at: t.created_at,
+          reservations: res,
+          lastBasketTotal: lastTotal,
+          nextLabel,
+        };
+      })
+      .sort((a, b) => a.number - b.number);
   };
 
   const loadAll = async () => {
     try {
       setLoading(true);
-      const [tRes, bRes] = await Promise.all([axios.get(TABLES_URL), axios.get(BASKETS_URL)]);
+      const [tRes, bRes] = await Promise.all([
+        axios.get(TABLES_URL, { params: { _ts: Date.now() } }),
+        axios.get(BASKETS_URL, { params: { _ts: Date.now() } }),
+      ]);
       const tablesApi = Array.isArray(tRes.data) ? tRes.data : [];
       const basketsApi = Array.isArray(bRes.data) ? bRes.data : [];
-
-      // NEW: saxla
       setAllBaskets(basketsApi);
-
-      const latestByTableId = new Map();
-      for (const b of basketsApi) {
-        const tid = b?.table?.id;
-        if (!tid) continue;
-        const exist = latestByTableId.get(tid);
-        if (!exist || new Date(b.created_at) > new Date(exist.created_at)) {
-          latestByTableId.set(tid, b);
-        }
-      }
-
-      const merged = tablesApi
-        .map((t) => {
-          const latest = latestByTableId.get(t.id);
-          const reservedNoteTime = latest ? parseReservedTimeFromNote(latest.note) : null;
-          return {
-            id: t.table_num,
-            number: t.table_num,
-            status: statusFromServer(t.status),
-            orderPrice: latest ? safeNumber(latest.total_cost) : 0,
-            orderTime: reservedNoteTime ?? (latest ? formatTime(latest.created_at) : null),
-            backendTableId: t.id,
-          };
-        })
-        .sort((a, b) => a.number - b.number);
-
-      setTables(merged);
+      setTables(buildTablesModel(tablesApi, basketsApi));
     } catch (e) {
       console.error(e);
       showNote("Məlumatlar çəkilərkən xəta baş verdi.", "error");
@@ -152,119 +229,245 @@ function AdminTablePage() {
     loadAll();
   }, []);
 
-  const handleTableClick = (tableId) => setSelectedTableId(tableId);
+  const openTable = (backendId) => {
+    setSelectedId(backendId);
+    // rezerv formunu default dəyərlərə gətir
+    setResvDate(todayYMD());
+    setResvStart("");
+    setResvEnd("");
+    setResvCustomer("");
+    setResvPhone("");
+  };
+
   const closePopup = () => {
-    setSelectedTableId(null);
-    setSelectedTable(null);
-    setReserveAt("");
+    setSelectedId(null);
   };
 
-  const showNote = (message, type = "info") => {
-    setNotification({ show: true, message, type });
-    setTimeout(() => setNotification({ show: false, message: "", type: "info" }), 3000);
-  };
-
-  const patchTableStatus = (backendTableId, serverStatus) => {
-    return axios.patch(
-      `${TABLES_URL}${backendTableId}/`,
+  /* ====== STATUS SYNC HELPERS (PATCH -> POST fallback) ====== */
+  const patchTableStatus = (backendId, serverStatus) =>
+    axios.patch(
+      `${TABLES_URL}${backendId}/`,
       { status: serverStatus },
       { headers: { "Content-Type": "application/json" } }
     );
+
+  const postTableStatus = (backendId, serverStatus) =>
+    axios.post(
+      TABLES_URL,
+      { id: backendId, status: serverStatus },
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+  const setTableStatusOnServer = async (tableId, nextStatusUI) => {
+    const serverStatus = statusToServer(nextStatusUI);
+    try {
+      await patchTableStatus(tableId, serverStatus);
+    } catch (e) {
+      // PATCH alınmadısa, tələbinizə uyğun POST fallback
+      await postTableStatus(tableId, serverStatus);
+    }
   };
 
-  const postBasket = (tableWithNewStatus, reservedTimeText = "") => {
+  const postBasketNote = (backendId, statusUI, reservedTimeText = "") => {
     const extra =
-      tableWithNewStatus.status === "reserved" && reservedTimeText
+      statusUI === "reserved" && reservedTimeText
         ? ` | Rezerv vaxtı: ${reservedTimeText}`
         : "";
     const payload = {
-      table_id: tableWithNewStatus.backendTableId,
-      note: `Status: ${statusNames[tableWithNewStatus.status] || tableWithNewStatus.status}${extra}`,
+      table_id: backendId,
+      note: `Status: ${statusNames[statusUI] || statusUI}${extra}`,
       service_cost: "2.50",
       items: [],
     };
-    return axios.post(BASKETS_URL, payload, { headers: { "Content-Type": "application/json" } });
+    return axios.post(BASKETS_URL, {
+      ...payload,
+    });
   };
 
-  const changeTableStatus = async (tableId, newStatusUI) => {
-    const prev = tables.find((t) => t.id === tableId);
+  const validateReservationForm = () => {
+    if (!resvDate) return "Tarix seçin.";
+    if (!resvStart) return "Başlama saatını seçin.";
+    if (!resvEnd) return "Bitmə saatını seçin.";
+    if (!resvCustomer) return "Müştəri adını yazın.";
+    if (!resvPhone) return "Telefon nömrəsini yazın.";
+
+    const rng = parseTimeRange(`${resvStart}-${resvEnd}`);
+    if (!rng || rng.startMin >= rng.endMin) {
+      return "Saat intervalı səhvdir. (məs: 12:00-16:00)";
+    }
+    return null;
+  };
+
+  const createReservation = async (table) => {
+    const err = validateReservationForm();
+    if (err) {
+      showNote(err, "error");
+      throw new Error(err);
+    }
+    const reserved_time = `${resvStart}-${resvEnd}`;
+    const payload = {
+      table: table.id,
+      chair_number: table.chairNumber ?? 4,
+      date: resvDate,
+      reserved_time,
+      phone: resvPhone,
+      customer: resvCustomer,
+    };
+    await axios.post(RESERVATIONS_URL, payload, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return reserved_time;
+  };
+
+  // Manual status change (reserved burada yoxdur — rezerv formu və auto-sync ilə örtürük)
+  const changeTableStatus = async (tableBackendId, newStatusUI) => {
+    const prev = tables.find((t) => t.id === tableBackendId);
     if (!prev) return;
+    setSyncingId(tableBackendId);
 
-    if (newStatusUI === "reserved" && !reserveAt) {
-      showNote("Zəhmət olmasa rezerv vaxtını seçin (HH:MM).", "error");
-      return;
-    }
-
-    const serverStatus = statusToServer(newStatusUI);
-    if (!prev.backendTableId) {
-      showNote("Bu masa üçün backend table_id tapılmadı.", "error");
-      return;
-    }
-
-    let nextOrderPrice = prev.orderPrice ?? 0;
-    let nextOrderTime = prev.orderTime ?? null;
-
-    if (newStatusUI === "reserved") {
-      nextOrderPrice = 0;
-      nextOrderTime = reserveAt;
-    } else if (newStatusUI === "empty") {
-      nextOrderPrice = 0;
-      nextOrderTime = null;
-    } else if (
-      (newStatusUI === "ordered" || newStatusUI === "waitingWaiter") &&
-      prev.status !== newStatusUI
-    ) {
-      const now = new Date().toLocaleTimeString("az-Latn-AZ", { hour: "2-digit", minute: "2-digit" });
-      nextOrderTime = now;
-    }
-
-    // Optimistic UI
-    setTables((p) =>
-      p.map((t) =>
-        t.id === tableId
-          ? { ...t, status: newStatusUI, orderPrice: nextOrderPrice, orderTime: nextOrderTime }
-          : t
-      )
-    );
-
-    setSyncingId(tableId);
     try {
-      await patchTableStatus(prev.backendTableId, serverStatus);
-      await postBasket(
-        { ...prev, status: newStatusUI, orderPrice: nextOrderPrice, orderTime: nextOrderTime },
-        newStatusUI === "reserved" ? reserveAt : ""
-      );
-      await loadAll();
-      showNote("Status dəyişdirildi və serverə yazıldı.", "success");
-    } catch (e) {
-      console.error(e);
+      // Optimistic UI
       setTables((p) =>
         p.map((t) =>
-          t.id === tableId
-            ? { ...t, status: prev.status, orderPrice: prev.orderPrice, orderTime: prev.orderTime }
+          t.id === tableBackendId
+            ? {
+                ...t,
+                status: newStatusUI,
+                color: statusColors[newStatusUI] || "#ccc",
+              }
             : t
         )
       );
-      const msg =
-        e?.response?.data ? `Xəta: ${JSON.stringify(e.response.data)}` : e?.message || "Naməlum xəta.";
-      showNote(`Dəyişiklik alınmadı. ${msg}`, "error");
+
+      await setTableStatusOnServer(tableBackendId, newStatusUI);
+      await postBasketNote(tableBackendId, newStatusUI, "");
+
+      await loadAll();
+      showNote("Əməliyyat yerinə yetirildi.", "success");
+    } catch (e) {
+      console.error(e);
+      showNote(e?.message || "Xəta baş verdi.", "error");
+      // revert
+      setTables((p) =>
+        p.map((t) =>
+          t.id === tableBackendId
+            ? { ...t, status: prev.status, color: prev.color }
+            : t
+        )
+      );
     } finally {
       setSyncingId(null);
     }
   };
 
-  const updateOrderPrice = (tableId, price) => {
-    setTables((prev) =>
-      prev.map((t) => (t.id === tableId ? { ...t, orderPrice: safeNumber(price) } : t))
-    );
+  const pickClosestReservationForBasket = (basket) => {
+    const resList = basket?.table?.reservations || [];
+    if (resList.length === 0) return null;
+    const anchorDay = toYMDfromISO(basket.created_at);
+    const future = resList
+      .filter((r) => r.date >= anchorDay)
+      .sort((a, b) => a.date.localeCompare(b.date));
+    return future[0] || null;
   };
 
-  // NEW: “Sifarişi gör” düyməsi üçün
+  const computeRuntimeFlags = (t) => {
+    const today = todayYMD();
+    const nowMin = nowMinutes();
+
+    const todays = (t.reservations || []).filter((r) => r.date === today);
+    let activeNow = false;
+    let startingSoon = false;
+    let dynamicLabel = t.nextLabel || "";
+
+    if (todays.length > 0) {
+      const sorted = todays.sort(
+        (a, b) =>
+          (parseTimeRange(a.reserved_time)?.startMin || 0) -
+          (parseTimeRange(b.reserved_time)?.startMin || 0)
+      );
+      for (const r of sorted) {
+        const rng = parseTimeRange(r.reserved_time);
+        if (!rng) continue;
+        if (nowMin >= rng.startMin && nowMin < rng.endMin) {
+          activeNow = true;
+          dynamicLabel = `Bu gün ${r.reserved_time}`;
+          break;
+        }
+        const delta = rng.startMin - nowMin;
+        if (delta > 0 && delta <= SOON_THRESHOLD_MIN) {
+          startingSoon = true;
+          dynamicLabel = `Bu gün ${r.reserved_time}`;
+        }
+      }
+    }
+    return { activeNow, startingSoon, dynamicLabel };
+  };
+
+  /* ====== AUTO SYNC: rezerv başlayanda → reserved; bitəndə → empty ======
+     Tələbinizə uyğun olaraq, başlanğıcda MASA HANSI STATUSDA OLSA DA reserved edilir,
+     bitəndə isə empty edilir.
+  */
+  const safeAutoSetStatus = async (tableId, nextStatus) => {
+    const key = String(tableId);
+    const now = Date.now();
+    const guard = autoOpsRef.current[key] || { lastStatus: null, ts: 0 };
+    if (guard.lastStatus === nextStatus && now - guard.ts < 60000) {
+      return; // 60s içində eyni statusa yenidən getməyək
+    }
+    autoOpsRef.current[key] = { lastStatus: nextStatus, ts: now };
+
+    // Local optimistic
+    setTables((p) =>
+      p.map((t) =>
+        t.id === tableId
+          ? { ...t, status: nextStatus, color: statusColors[nextStatus] || t.color }
+          : t
+      )
+    );
+
+    try {
+      await setTableStatusOnServer(tableId, nextStatus);
+    } catch (err) {
+      console.warn("Auto status sync failed:", err?.message || err);
+    }
+  };
+
+  // Hər 15 saniyədə bir masaların zamanla uyğun statusunu serverlə sinxronlaşdırırıq
+  useEffect(() => {
+    if (!tables || tables.length === 0) return;
+    const today = todayYMD();
+    const nowMin = nowMinutes();
+
+    tables.forEach((t) => {
+      const todays = (t.reservations || []).filter((r) => r.date === today);
+      let activeNow = false;
+      for (const r of todays) {
+        const rng = parseTimeRange(r.reserved_time);
+        if (!rng) continue;
+        if (nowMin >= rng.startMin && nowMin < rng.endMin) {
+          activeNow = true;
+          break;
+        }
+      }
+
+      if (activeNow) {
+        // başladıqda -> mütləq reserved
+        if (t.status !== "reserved") {
+          safeAutoSetStatus(t.id, "reserved");
+        }
+      } else {
+        // bitəndən sonra -> reserved idisə empty et
+        if (t.status === "reserved") {
+          safeAutoSetStatus(t.id, "empty");
+        }
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nowTick, tables]);
+
   const openOrdersPopup = (tbl) => {
-    if (!tbl?.backendTableId) return;
-    // Ən yenisi birinci
     const rows = allBaskets
-      .filter((b) => b?.table?.id === tbl.backendTableId)
+      .filter((b) => b?.table?.id === tbl.id)
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     setOrdersForTable(rows);
     setShowOrdersPopup(true);
@@ -280,19 +483,56 @@ function AdminTablePage() {
           </button>
         </div>
       </div>
-
+ <div className="legend">
+        <h2>Rəng Kodları</h2>
+        <div className="legend-items">
+          <Legend color={statusColors.empty} label={statusNames.empty} />
+          <Legend color={statusColors.reserved} label={statusNames.reserved} />
+          <Legend color={statusColors.ordered} label={statusNames.ordered} />
+          <Legend
+            color={statusColors.waitingFood}
+            label={statusNames.waitingFood}
+          />
+          <Legend
+            color={statusColors.waitingWaiter}
+            label={statusNames.waitingWaiter}
+          />
+          <Legend
+            color={statusColors.waitingBill}
+            label={statusNames.waitingBill}
+          />
+        </div>
+      </div>
       <div className="tables-container">
-        {tables.map((table) => (
-          <div key={table.id} className="table-wrapper" onClick={() => handleTableClick(table.id)}>
-            <div className="table" style={{ backgroundColor: statusColors[table.status] || "#ccc" }}>
-              <div className="table-number">{table.number}</div>
-              <div className="chair chair-top"></div>
-              <div className="chair chair-right"></div>
-              <div className="chair chair-bottom"></div>
-              <div className="chair chair-left"></div>
+        {tables.map((t) => {
+          // canlı indikatorlar
+          // eslint-disable-next-line no-unused-vars
+          const _tick = nowTick; // yalnız rerender üçün
+          const { activeNow, startingSoon } = computeRuntimeFlags(t);
+          const bgColor = activeNow ? statusColors.reserved : t.color;
+
+          return (
+            <div
+              key={t.id}
+              className="table-wrapper"
+              onClick={() => openTable(t.id)}
+            >
+              <div
+                className={`table ${
+                  activeNow ? "active-now" : startingSoon ? "starting-soon" : ""
+                }`}
+                style={{ backgroundColor: bgColor }}
+              >
+                <div className="table-number">{t.number}</div>
+
+                <div className="chair chair-top"></div>
+                <div className="chair chair-right"></div>
+                <div className="chair chair-bottom"></div>
+                <div className="chair chair-left"></div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {!loading && tables.length === 0 && (
           <div className="empty-state">Masa tapılmadı. (GET /api/tables/)</div>
@@ -302,103 +542,235 @@ function AdminTablePage() {
       {selectedTable && (
         <div className="popup-overlay" onClick={closePopup}>
           <div className="table-popup" onClick={(e) => e.stopPropagation()}>
-            <button className="close-btn" onClick={closePopup}>×</button>
-
-            <h2>Masa {selectedTable.number}</h2>
-
-            <div className="status-info">
-              <div
-                className="status-color"
-                style={{ backgroundColor: statusColors[selectedTable.status] || "#ccc" }}
-              ></div>
-              <span>Status: {statusNames[selectedTable.status]}</span>
-            </div>
-
-            {(selectedTable.orderTime || selectedTable.orderPrice > 0) && (
-              <div className="order-info">
-                {selectedTable.orderTime && (
-                  <p>
-                    {selectedTable.status === "reserved" ? "Rezerv vaxtı: " : "Sifariş vaxtı: "}
-                    <strong>{selectedTable.orderTime}</strong>
-                  </p>
-                )}
-                {selectedTable.status !== "reserved" && (
-                  <p>
-                    Sifariş Qiyməti: <strong>{Number(selectedTable.orderPrice || 0).toFixed(2)}₼</strong>
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* REZERV VAxTI GİRİŞİ */}
-            <div className="reserve-control">
-              <label>Rezerv vaxtı (HH:MM):</label>
-              <input
-                type="time"
-                value={reserveAt}
-                onChange={(e) => setReserveAt(e.target.value)}
-                disabled={syncingId === selectedTable.id}
-              />
-              <small className="hint">
-                “Rezerv” düyməsinə basmazdan öncə vaxtı seçin (məs: 19:00).
-              </small>
-            </div>
-
-            <div className="status-controls">
-              <h3>Statusu Dəyişdir </h3>
-              <div className="status-buttons">
-                <button
-                  onClick={() => changeTableStatus(selectedTable.id, "empty")}
-                  className={selectedTable.status === "empty" ? "active" : ""}
-                  disabled={syncingId === selectedTable.id}
-                >
-                  Boş
-                </button>
-                <button
-                  onClick={() => changeTableStatus(selectedTable.id, "reserved")}
-                  className={selectedTable.status === "reserved" ? "active" : ""}
-                  disabled={syncingId === selectedTable.id}
-                >
-                  Rezerve
-                </button>
-                <button
-                  onClick={() => changeTableStatus(selectedTable.id, "ordered")}
-                  className={selectedTable.status === "ordered" ? "active" : ""}
-                  disabled={syncingId === selectedTable.id}
-                >
-                  Sifariş Verildi
-                </button>
-                <button
-                  onClick={() => changeTableStatus(selectedTable.id, "waitingFood")}
-                  className={selectedTable.status === "waitingFood" ? "active" : ""}
-                  disabled={syncingId === selectedTable.id}
-                >
-                  Yəmək Gözləyir
-                </button>
-                <button
-                  onClick={() => changeTableStatus(selectedTable.id, "waitingWaiter")}
-                  className={selectedTable.status === "waitingWaiter" ? "active" : ""}
-                  disabled={syncingId === selectedTable.id}
-                >
-                  Ofisiant Gözləyir
-                </button>
-              </div>
-              {syncingId === selectedTable.id && <p className="hint">Yazılır...</p>}
-            </div>
-
-            {/* NEW: Sifarişləri gör düyməsi */}
-            <button
-              className="submit-btn"
-              onClick={() => openOrdersPopup(selectedTable)}
-              disabled={!selectedTable?.backendTableId}
-            >
-              Sifarişi gör
+            <button className="close-btn" onClick={closePopup}>
+              ×
             </button>
+
+            <h2 className="popup-title">Masa {selectedTable.number}</h2>
+
+            {/* FLEX + SCROLL bədən */}
+            <div className="popup-body">
+              <div className="status-info">
+                <div
+                  className="status-color"
+                  style={{
+                    backgroundColor:
+                      statusColors[selectedTable.status] || "#ccc",
+                  }}
+                />
+                <span>Status: {statusNames[selectedTable.status]}</span>
+              </div>
+
+              <div className="full-info">
+                <div className="info-row">
+                  <span className="info-label">Stul sayı:</span>
+                  <span className="info-value">
+                    {selectedTable.chairNumber ?? "—"}
+                  </span>
+                </div>
+
+                {/* Boş olanda gizlət */}
+                {selectedTable.status !== "empty" && (
+                  <>
+                    <div className="info-row">
+                      <span className="info-label">Yaradılma:</span>
+                      <span className="info-value">
+                        {toAzDateTime(selectedTable.created_at)}
+                      </span>
+                    </div>
+                    {selectedTable.lastBasketTotal > 0 && (
+                      <div className="info-row">
+                        <span className="info-label">Son sifariş cəmi:</span>
+                        <span className="info-value">
+                          {selectedTable.lastBasketTotal.toFixed(2)}₼
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Rezervlər siyahısı */}
+              <div className="reservations-box">
+                <div className="box-head">Rezervlər (bugün və sonrası)</div>
+                <div className="resv-list">
+                  {selectedTable.reservations
+                    .filter((r) => r.date >= todayYMD())
+                    .sort((a, b) =>
+                      a.date === b.date
+                        ? (parseTimeRange(a.reserved_time)?.startMin || 0) -
+                          (parseTimeRange(b.reserved_time)?.startMin || 0)
+                        : a.date.localeCompare(b.date)
+                    )
+                    .map((r) => (
+                      <div key={r.id} className="resv-pill">
+                        <span className="date">{toAzDate(r.date)}</span>
+                        <span className="time">{r.reserved_time}</span>
+                        <span className="cust">
+                          — {r.phone}
+                          {r.customer ? `, ${r.customer}` : ""}
+                        </span>
+                      </div>
+                    ))}
+                  {selectedTable.reservations.filter(
+                    (r) => r.date >= todayYMD()
+                  ).length === 0 && (
+                    <div className="resv-empty">Rezerv yoxdur.</div>
+                  )}
+                </div>
+              </div>
+
+              {/* REZERV FORMU (manual yaratmaq üçün) */}
+              <div className="reservation-form">
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Tarix</label>
+                    <input
+                      type="date"
+                      value={resvDate}
+                      onChange={(e) => setResvDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Başlama saatı</label>
+                    <input
+                      type="time"
+                      value={resvStart}
+                      onChange={(e) => setResvStart(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Bitmə saatı</label>
+                    <input
+                      type="time"
+                      value={resvEnd}
+                      onChange={(e) => setResvEnd(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Müştəri adı</label>
+                    <input
+                      type="text"
+                      placeholder="Ad Soyad"
+                      value={resvCustomer}
+                      onChange={(e) => setResvCustomer(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Telefon</label>
+                    <input
+                      type="tel"
+                      placeholder="+994..."
+                      value={resvPhone}
+                      onChange={(e) => setResvPhone(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-actions">
+                  <button
+                    className="btn secondary"
+                    onClick={async () => {
+                      try {
+                        setSyncingId(selectedTable.id);
+                        const reservedTime = await createReservation(
+                          selectedTable
+                        );
+                        await loadAll();
+                        showNote(
+                          `Rezerv yaradıldı (${reservedTime}).`,
+                          "success"
+                        );
+                      } catch (e) {
+                        /* error artıq bildirilib */
+                      } finally {
+                        setSyncingId(null);
+                      }
+                    }}
+                    disabled={syncingId === selectedTable.id}
+                  >
+                    Rezerv et
+                  </button>
+                </div>
+              </div>
+
+              {/* Status düymələri (reserved yoxdur — auto & rezerv formu ilə yenilənir) */}
+              <div className="status-controls">
+                <h3>Statusu Dəyişdir</h3>
+                <div className="status-buttons">
+                  <button
+                    onClick={() => changeTableStatus(selectedTable.id, "empty")}
+                    className={selectedTable.status === "empty" ? "active" : ""}
+                    disabled={syncingId === selectedTable.id}
+                  >
+                    Boş
+                  </button>
+                  <button
+                    onClick={() =>
+                      changeTableStatus(selectedTable.id, "ordered")
+                    }
+                    className={
+                      selectedTable.status === "ordered" ? "active" : ""
+                    }
+                    disabled={syncingId === selectedTable.id}
+                  >
+                    Sifariş
+                  </button>
+                  <button
+                    onClick={() =>
+                      changeTableStatus(selectedTable.id, "waitingFood")
+                    }
+                    className={
+                      selectedTable.status === "waitingFood" ? "active" : ""
+                    }
+                    disabled={syncingId === selectedTable.id}
+                  >
+                    Yemək Gözləyir
+                  </button>
+                  <button
+                    onClick={() =>
+                      changeTableStatus(selectedTable.id, "waitingWaiter")
+                    }
+                    className={
+                      selectedTable.status === "waitingWaiter" ? "active" : ""
+                    }
+                    disabled={syncingId === selectedTable.id}
+                  >
+                    Ofisiant Gözləyir
+                  </button>
+                  <button
+                    onClick={() =>
+                      changeTableStatus(selectedTable.id, "waitingBill")
+                    }
+                    className={
+                      selectedTable.status === "waitingBill" ? "active" : ""
+                    }
+                    disabled={syncingId === selectedTable.id}
+                  >
+                    Hesab Gözləyir
+                  </button>
+                </div>
+                {syncingId === selectedTable.id && (
+                  <p className="hint">Yazılır...</p>
+                )}
+              </div>
+            </div>
+
+            {/* Alt sabit düymə */}
+            <div className="popup-footer">
+              <button
+                className="submit-btn"
+                onClick={() => openOrdersPopup(selectedTable)}
+                disabled={!selectedTable?.id}
+              >
+                Sifarişi gör
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* NEW: Sifarişlər popupu */}
+      {/* Sifarişlər popupu */}
       {showOrdersPopup && (
         <div
           className="popup-overlay"
@@ -406,79 +778,91 @@ function AdminTablePage() {
           onClick={() => setShowOrdersPopup(false)}
         >
           <div className="table-popup" onClick={(e) => e.stopPropagation()}>
-            <button className="close-btn" onClick={() => setShowOrdersPopup(false)}>×</button>
+            <button
+              className="close-btn"
+              onClick={() => setShowOrdersPopup(false)}
+            >
+              ×
+            </button>
             <h2>Masa {selectedTable?.number} — Sifarişlər</h2>
 
             {ordersForTable.length === 0 ? (
               <div className="empty-state">Bu masada sifariş tapılmadı.</div>
             ) : (
               <div className="orders-list">
-                {ordersForTable.map((b) => (
-                  <div className="order-card" key={b.id}>
-                    <div className="order-header">
-                      <span>Basket #{b.id}</span>
-                      <span>{formatDateTime(b.created_at)}</span>
-                    </div>
+                {ordersForTable.map((b) => {
+                  const resv = pickClosestReservationForBasket(b);
+                  const stName =
+                    statusNames[normalizeStatus(b?.table?.status)] || "—";
+                  return (
+                    <div className="order-card" key={b.id}>
+                      <div className="order-header">
+                        <span>Basket #{b.id}</span>
+                        <span>{toAzDateTime(b.created_at)}</span>
+                      </div>
 
-                    <div className="order-line">
-                      <strong>Qeyd:</strong> {b.note || "—"}
-                    </div>
+                      <div className="order-meta alt">
+                        <span>
+                          <strong>Status:</strong> {stName}
+                        </span>
+                        <span>
+                          <strong>Gün:</strong>{" "}
+                          {resv ? toAzDate(resv.date) : "—"}
+                        </span>
+                        <span>
+                          <strong>Saat:</strong> {resv?.reserved_time || "—"}
+                        </span>
+                        <span>
+                          <strong>Müştəri:</strong> {resv?.customer || "—"}
+                        </span>
+                        <span>
+                          <strong>Nömrə:</strong> {resv?.phone || "—"}
+                        </span>
+                      </div>
 
-                    <div className="order-meta">
-                      <span>Servis: <strong>{to2(b.service_cost)}₼</strong></span>
-                      <span>Cəmi: <strong>{to2(b.total_cost)}₼</strong></span>
-                      <span>Vaxt: <strong>{b.total_time || 0} dəq</strong></span>
+                      {Array.isArray(b.items) && b.items.length > 0 && (
+                        <ul className="order-items">
+                          {b.items.map((it) => (
+                            <li key={it.id} className="order-item-row">
+                              <span>
+                                {it.count} × {it.name_az}
+                              </span>
+                              <span>
+                                {(Number(it.cost) * Number(it.count)).toFixed(
+                                  2
+                                )}
+                                ₼
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
-
-                    {Array.isArray(b.items) && b.items.length > 0 && (
-                      <ul className="order-items">
-                        {b.items.map((it) => (
-                          <li key={it.id} className="order-item-row">
-                            <span>
-                              {it.count} × {it.name_az}
-                            </span>
-                            <span>{to2(Number(it.cost) * Number(it.count))}₼</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
         </div>
       )}
 
-      <div className="legend">
-        <h2>Rəng Kodları</h2>
-        <div className="legend-items">
-          <div className="legend-item">
-            <div className="color-box" style={{ backgroundColor: statusColors.empty }}></div>
-            <span>Boş Masa</span>
-          </div>
-          <div className="legend-item">
-            <div className="color-box" style={{ backgroundColor: statusColors.reserved }}></div>
-            <span>Rezerve Edilmiş</span>
-          </div>
-          <div className="legend-item">
-            <div className="color-box" style={{ backgroundColor: statusColors.ordered }}></div>
-            <span>Sifariş Verildi</span>
-          </div>
-          <div className="legend-item">
-            <div className="color-box" style={{ backgroundColor: statusColors.waitingFood }}></div>
-            <span>Yemək Gözləyir</span>
-          </div>
-          <div className="legend-item">
-            <div className="color-box" style={{ backgroundColor: statusColors.waitingWaiter }}></div>
-            <span>Ofisiant Gözləyir</span>
-          </div>
-        </div>
-      </div>
+      {/* Legend */}
+     
 
       {notification.show && (
-        <div className={`notification ${notification.type}`}>{notification.message}</div>
+        <div className={`notification ${notification.type}`}>
+          {notification.message}
+        </div>
       )}
+    </div>
+  );
+}
+
+function Legend({ color, label }) {
+  return (
+    <div className="legend-item">
+      <div className="color-box" style={{ backgroundColor: color }}></div>
+      <span>{label}</span>
     </div>
   );
 }

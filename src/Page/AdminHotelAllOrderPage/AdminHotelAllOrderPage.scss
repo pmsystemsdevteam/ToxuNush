@@ -1,0 +1,147 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css");
+
+.admin-room-pagee {
+  padding: 24px;
+  margin-top: 60px;
+  margin-left: 90px;
+  font-weight: 600;
+
+  * {
+    font-family: "Poppins", sans-serif !important;
+  }
+
+  .page-title {
+    margin-bottom: 24px;
+    color: #333;
+    width: 100%;
+  }
+
+  .search-paper {
+    padding: 16px;
+    margin-bottom: 24px;
+    border-radius: 12px;
+  }
+
+  .panels-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+
+    @media (max-width: 1100px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .panel {
+    padding: 16px 16px 4px 16px;
+    border-radius: 12px;
+    height: 80vh;
+    overflow-y: auto;
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      position: sticky;
+      top: 0;
+      background: white;
+      z-index: 10;
+      padding: 8px 0;
+    }
+  }
+
+  .compact-rooms-container {
+    max-height: calc(80vh - 70px);
+    overflow-y: auto;
+  }
+
+  .compact-room-card {
+    height: 100%;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    min-width: 150px;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  .compact-room-content {
+    padding: 12px !important;
+    
+    .MuiTypography-subtitle1 {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+  }
+
+  .compact-orders-list {
+    margin-top: 8px;
+  }
+
+  .compact-order-accordion {
+    margin-bottom: 8px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+
+    &:before {
+      display: none;
+    }
+  }
+
+  .compact-order-summary {
+    min-height: 40px !important;
+    
+    .MuiAccordionSummary-content {
+      margin: 4px 0 !important;
+    }
+  }
+
+  .compact-order-details {
+    padding: 8px 16px 16px !important;
+  }
+
+  .order-accordion {
+    margin-bottom: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+
+    &.inner {
+      border-color: #e5f2ff;
+      .MuiAccordionSummary-root {
+        background: rgba(33, 150, 243, 0.06);
+      }
+    }
+
+    &:before {
+      display: none;
+    }
+
+    .MuiAccordionSummary-content {
+      align-items: center;
+    }
+  }
+
+  .all-orders-container {
+    max-height: calc(80vh - 70px);
+    overflow-y: auto;
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px;
+    margin-left: 0;
+    margin-top: 50px;
+
+    .page-title {
+      font-size: 1.8rem;
+    }
+    
+    .compact-room-card {
+      margin-bottom: 16px;
+    }
+  }
+}

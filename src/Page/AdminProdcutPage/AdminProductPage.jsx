@@ -1,30 +1,51 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "./AdminProductPage.scss";
 import { Link } from "react-router-dom";
 import axios from "axios";
 
-const PRODUCTS_URL = "https://api.albanproject.az/api/products/";
+const PRODUCTS_URL   = "https://api.albanproject.az/api/products/";
 const CATEGORIES_URL = "https://api.albanproject.az/api/categories/";
 
 function AdminProductPage() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [catMap, setCatMap] = useState({}); // id -> ad
+
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  // Delete modal
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     productId: null,
     productName: "",
   });
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
 
-  // Kateqoriyalar
-  const [categories, setCategories] = useState([]);
-  const [catMap, setCatMap] = useState({}); // id -> ad
+  // Search
+  const [query, setQuery] = useState("");
 
-  // Pagination state
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const productsPerPage = 6;
+  const productsPerPage = 10;
 
-  // --- API: GET /products ---
+  // ============ Helpers ============
+  const asPrice = (cost) => {
+    const n = typeof cost === "string" ? parseFloat(cost) : Number(cost);
+    return Number.isFinite(n) ? n.toFixed(2) : cost;
+  };
+  const catName = (id) => catMap[id] || `#${id}`;
+
+  const filterProducts = (list, q) => {
+    const needle = q.trim().toLowerCase();
+    if (!needle) return list;
+    return list.filter((p) => {
+      const hay =
+        `${p.name_az || ""} ${p.name_en || ""} ${p.name_ru || ""}`.toLowerCase();
+      return hay.includes(needle);
+    });
+  };
+
+  // ============ API ============
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -32,8 +53,6 @@ function AdminProductPage() {
       const res = await axios.get(PRODUCTS_URL);
       const arr = Array.isArray(res.data) ? res.data : [];
       setProducts(arr);
-      const total = Math.ceil(arr.length / productsPerPage) || 1;
-      if (currentPage > total) setCurrentPage(total);
     } catch (e) {
       console.error(e);
       setErrorMsg("Məhsullar yüklənərkən xəta baş verdi.");
@@ -42,13 +61,11 @@ function AdminProductPage() {
     }
   };
 
-  // --- API: GET /categories ---
   const fetchCategories = async () => {
     try {
       const res = await axios.get(CATEGORIES_URL);
       const cats = Array.isArray(res.data) ? res.data : [];
       setCategories(cats);
-      // id → ad xəritəsi
       const map = cats.reduce((acc, c) => {
         acc[c.id] = c.name_az || c.name || c.title || `Kateqoriya #${c.id}`;
         return acc;
@@ -56,137 +73,142 @@ function AdminProductPage() {
       setCatMap(map);
     } catch (e) {
       console.error(e);
-      // kateqoriya gelməsə də UI fallback ilə (#id) işləyəcək
     }
   };
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // --- Delete (DELETE /products/{id}/) ---
+  // query dəyişəndə səhifəni 1-ə qaytar
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query]);
+
+  // Filter + Pagination
+  const filtered = useMemo(() => filterProducts(products, query), [products, query]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / productsPerPage));
+  const indexOfLast   = currentPage * productsPerPage;
+  const indexOfFirst  = indexOfLast - productsPerPage;
+  const currentItems  = filtered.slice(indexOfFirst, indexOfLast);
+
+  const paginate  = (n) => setCurrentPage(n);
+  const nextPage  = () => currentPage < totalPages && setCurrentPage(currentPage + 1);
+  const prevPage  = () => currentPage > 1 && setCurrentPage(currentPage - 1);
+
+  // Delete
+  const openDeleteModal  = (id, name) => setDeleteModal({ isOpen: true, productId: id, productName: name });
+  const closeDeleteModal = () => setDeleteModal({ isOpen: false, productId: null, productName: "" });
+
   const handleDelete = async (id) => {
     try {
       await axios.delete(`${PRODUCTS_URL}${id}/`);
       const next = products.filter((p) => p.id !== id);
       setProducts(next);
 
-      const totalPagesAfter = Math.ceil(next.length / productsPerPage) || 1;
-      const indexOfLastProduct = currentPage * productsPerPage;
-      const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-      const currentProductsAfter = next.slice(indexOfFirstProduct, indexOfLastProduct);
-      if (currentPage > 1 && currentPage > totalPagesAfter) {
-        setCurrentPage(currentPage - 1);
-      } else if (currentPage > 1 && currentProductsAfter.length === 0) {
-        setCurrentPage(currentPage - 1);
-      }
+      // filtered siyahıya görə səhifəni düzəlt
+      const filteredNext = filterProducts(next, query);
+      const newTotalPages = Math.max(1, Math.ceil(filteredNext.length / productsPerPage));
+      if (currentPage > newTotalPages) setCurrentPage(newTotalPages);
     } catch (e) {
       console.error(e);
       alert("Silinmə zamanı xəta baş verdi.");
     } finally {
-      setDeleteModal({ isOpen: false, productId: null, productName: "" });
+      closeDeleteModal();
     }
   };
-
-  const openDeleteModal = (id, name) => setDeleteModal({ isOpen: true, productId: id, productName: name });
-  const closeDeleteModal = () => setDeleteModal({ isOpen: false, productId: null, productName: "" });
-
-  // Pagination məntiqi
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = products.slice(indexOfFirstProduct, indexOfLastProduct);
-  const totalPages = Math.ceil(products.length / productsPerPage) || 1;
-
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-  const nextPage = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
-  const prevPage = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
-
-  // helper
-  const asPrice = (cost) => {
-    const n = typeof cost === "string" ? parseFloat(cost) : Number(cost);
-    return Number.isFinite(n) ? n.toFixed(2) : cost;
-  };
-  const catName = (id) => catMap[id] || `#${id}`;
 
   return (
     <div className="admin-product-page">
       <div className="container">
         <div className="page-header2">
-          <h1 className="page-title">Məhsul</h1>
-          <Link to={"add"} className="add-product-btn">
-            <i className="fas fa-plus"></i>
-            Yeni Məhsul
-          </Link>
+          <h1 className="page-title">Məhsullar</h1>
+
+          <div className="right-tools">
+            <div className="search-wrap">
+              <i className="fas fa-search" />
+              <input
+                type="text"
+                placeholder="Ada görə axtar..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+
+            <Link to={"add"} className="add-product-btn">
+              <i className="fas fa-plus"></i>
+              Yeni Məhsul
+            </Link>
+          </div>
         </div>
 
         {loading && <div className="loading">Yüklənir...</div>}
         {errorMsg && <div className="error">{errorMsg}</div>}
 
-        <div className="products-grid">
-          {currentProducts.map((product) => (
-            <div key={product.id} className="product-card">
-              <div className="card-image">
-                <img src={product.image} alt={product.name_az} />
-                <div className="card-badges">
-                  {product.vegan && <span className="badge vegetarian">Vegan</span>}
-                  {product.halal && <span className="badge halal">Halal</span>}
-                </div>
-              </div>
-
-              <div className="card-content">
-                <h3 className="product-name">{product.name_az}</h3>
-                <div className="name-translations">
-                  <span>{product.name_en}</span>
-                  <span>{product.name_ru}</span>
-                </div>
-
-                <div className="product-category">
-                  <i className="fas fa-tag"></i>
-                  Kateqoriya: {catName(product.category)}
-                </div>
-
-                <div className="product-description">
-                  <p>{product.description_az}</p>
-                  <div className="description-translations">
-                    <p>{product.description_en}</p>
-                    <p>{product.description_ru}</p>
-                  </div>
-                </div>
-
-                <div className="product-details">
-                  <div className="detail-item">
-                    <i className="fas fa-coins"></i>
-                    <span>{asPrice(product.cost)} AZN</span>
-                  </div>
-
-                  <div className="detail-item">
-                    <i className="fas fa-clock"></i>
-                    <span>{product.time} dəq</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="card-actions">
-                <Link to={`edit/${product.id}`} className="action-btn edit">
-                  <i className="fas fa-edit"></i>
-                  Edit
-                </Link>
-
-                <button
-                  className="action-btn delete"
-                  onClick={() => openDeleteModal(product.id, product.name_az)}
-                >
-                  <i className="fas fa-trash"></i>
-                  Sil
-                </button>
-              </div>
-            </div>
-          ))}
+        {/* TABLE VIEW */}
+        <div className="table-wrap">
+          <table className="product-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Şəkil</th>
+                <th>Ad</th>
+                <th>Kateqoriya</th>
+                <th>Qiymət</th>
+                <th>Vaxt</th>
+                <th>Etiketlər</th>
+                <th>Əməliyyat</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentItems.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="no-data">Nəticə tapılmadı.</td>
+                </tr>
+              ) : currentItems.map((p, idx) => (
+                <tr key={p.id}>
+                  <td>{indexOfFirst + idx + 1}</td>
+                  <td>
+                    <div className="thumb">
+                      {/* backend image link birbaşa gəldiyi üçün 1:1 göstəririk */}
+                      <img src={p.image} alt={p.name_az} />
+                    </div>
+                  </td>
+                  <td>
+                    <div className="names">
+                      <div className="main">{p.name_az}</div>
+                      <div className="sub">{p.name_en}</div>
+                      <div className="sub">{p.name_ru}</div>
+                    </div>
+                  </td>
+                  <td>{catName(p.category)}</td>
+                  <td>{asPrice(p.cost)} AZN</td>
+                  <td>{p.time} dəq</td>
+                  <td>
+                    <div className="badges">
+                      {p.vegan && <span className="badge green">Vegan</span>}
+                      {p.halal && <span className="badge blue">Halal</span>}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="table-actions">
+                      <Link to={`edit/${p.id}`} className="btn edit">
+                        <i className="fas fa-edit"></i> Edit
+                      </Link>
+                      <button className="btn delete" onClick={() => openDeleteModal(p.id, p.name_az)}>
+                        <i className="fas fa-trash"></i> Sil
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        {!loading && products.length > productsPerPage && (
+        {/* Pagination */}
+        {filtered.length > productsPerPage && (
           <div className="pagination">
             <button
               className={`pagination-btn ${currentPage === 1 ? "disabled" : ""}`}
@@ -221,12 +243,13 @@ function AdminProductPage() {
         )}
       </div>
 
+      {/* Delete modal */}
       {deleteModal.isOpen && (
         <div className="modal-overlay">
           <div className="confirmation-modal">
             <div className="modal-header">
               <h3>Məhsulu Sil</h3>
-              <button className="close-btn" onClick={closeDeleteModal}>
+              <button className="close-btn" onClick={() => setDeleteModal({ isOpen:false, productId:null, productName:"" })}>
                 <i className="fas fa-times"></i>
               </button>
             </div>
@@ -237,18 +260,16 @@ function AdminProductPage() {
               </div>
 
               <p>
-                "<strong>{deleteModal.productName}</strong>" adlı məhsulu silmək istədiyinizə əminsiniz? Bu əməliyyat geri alına bilməz.
+                "<strong>{deleteModal.productName}</strong>" adlı məhsulu silmək istədiyinizə əminsiniz?
+                Bu əməliyyat geri alına bilməz.
               </p>
             </div>
 
             <div className="modal-actions">
-              <button className="btn cancel" onClick={closeDeleteModal}>
+              <button className="btn cancel" onClick={() => setDeleteModal({ isOpen:false, productId:null, productName:"" })}>
                 Ləğv Et
               </button>
-              <button
-                className="btn confirm"
-                onClick={() => handleDelete(deleteModal.productId)}
-              >
+              <button className="btn confirm" onClick={() => handleDelete(deleteModal.productId)}>
                 Sil
               </button>
             </div>

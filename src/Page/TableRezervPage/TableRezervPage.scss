@@ -1,0 +1,586 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css");
+
+.rezerv-page {
+  min-height: 100vh;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  font-family: "Poppins", sans-serif;
+
+  .container {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    padding: 30px;
+    width: 90%;
+    margin-top: 20px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  h1 {
+    color: #2c3e50;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+
+  .subtitle {
+    color: #7f8c8d;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+  }
+
+  .status-info {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+    background-color: #f8f9fa;
+    border-radius: 50px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-size: 0.9rem;
+  }
+
+  .status-color {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+  }
+  .empty-color {
+    background-color: #cccccc;
+  } /* boz */
+  .reserved-color {
+    background-color: #e74c3c;
+  } /* qırmızı */
+  .occupied-color {
+    background-color: #3498db;
+  } /* göy */
+
+  /* İstəsən legend-ə ayrıca əlavə edə bilərsən, hamısı göy olacaq */
+  .ordered-color,
+  .waitingFood-color,
+  .waitingWaiter-color,
+  .waitingBill-color {
+    background-color: #3498db;
+  }
+
+  .masalar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+  }
+
+  .masa {
+    background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+    height: 150px;
+    width: 150px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      right: -10px;
+      bottom: -10px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    &:hover {
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 15px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Statuslara görə rəngləmə */
+    &.empty {
+      background: #cccccc; /* boz */
+    }
+    &.reserved {
+      background: linear-gradient(
+        135deg,
+        #e74c3c 0%,
+        #c0392b 100%
+      ); /* qırmızı */
+    }
+    &.occupied,
+    &.ordered,
+    &.waitingFood,
+    &.waitingWaiter,
+    &.waitingBill {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); /* göy */
+    }
+  }
+
+  .masa-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+    z-index: 2;
+  }
+  .masa-chairs {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 3px;
+    z-index: 2;
+  }
+  .masa-status {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    z-index: 2;
+    text-align: center;
+    padding: 0 10px;
+    font-weight: 600;
+  }
+
+  .popup-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+    padding: 20px;
+  }
+
+  .popup-content {
+    background: white;
+    width: 100%;
+    max-width: 560px;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: slideIn 0.5s ease;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #7f8c8d;
+    transition: color 0.3s ease;
+    &:hover {
+      color: #e74c3c;
+    }
+  }
+
+  .popup-title {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 1.8rem;
+  }
+  .popup-info {
+    margin-bottom: 20px;
+  }
+
+  .info-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #ecf0f1;
+    flex-wrap: wrap;
+  }
+
+  .info-label {
+    color: #7f8c8d;
+    font-weight: 500;
+    width: 45%;
+  }
+  .info-value {
+    color: #2c3e50;
+    font-weight: bold;
+    width: 55%;
+    text-align: right;
+
+    &.status-text {
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    &.empty {
+      color: #999;
+    } /* boz mətn */
+    &.reserved {
+      color: #c0392b;
+    } /* qırmızı mətn */
+    &.occupied,
+    &.ordered,
+    &.waitingFood,
+    &.waitingWaiter,
+    &.waitingBill {
+      color: #2980b9;
+    } /* göy mətn */
+  }
+
+  .popup-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  .reserve-btn {
+    background: #abc7da;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  /* Loading */
+  &.loading {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+  }
+  .loader {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 2s linear infinite;
+    margin-bottom: 20px;
+  }
+
+  /* Error */
+  &.error {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+    .fa-exclamation-triangle {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      color: #e74c3c;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      &:hover {
+        background-color: #2980b9;
+      }
+    }
+  }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* --- Rezervasiya formu --- */
+  .reservation-form {
+    max-width: 600px !important;
+
+    .conflict-banner {
+      background: #fdecea;
+      color: #b3261e;
+      border: 1px solid #f5c2c0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      i {
+        margin-right: 8px;
+      }
+      .conflict-list {
+        display: grid;
+        gap: 6px;
+        .conflict-item {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          .time {
+            font-weight: 700;
+          }
+          .sep {
+            opacity: 0.6;
+          }
+          .cust {
+            font-weight: 600;
+          }
+          .phone {
+            opacity: 0.8;
+          }
+        }
+      }
+    }
+
+    .existing-reservations {
+      background: #f7f9fc;
+      border: 1px solid #e6eef7;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+
+      .head {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        i {
+          color: #3498db;
+        }
+      }
+      .slots {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        .slot {
+          padding: 6px 10px;
+          border-radius: 999px;
+          font-size: 0.9rem;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          background: #fdecea;
+          color: #b3261e;
+          border: 1px solid #f5c2c0;
+          .time {
+            font-weight: 700;
+          }
+          .dot {
+            opacity: 0.6;
+          }
+          &.empty {
+            background: #ecf8ee;
+            border-color: #c9efd2;
+            color: #2f7d3c;
+            font-weight: 600;
+          }
+        }
+      }
+    }
+
+    .selected-range {
+      background: #eef6ff;
+      border: 1px solid #cfe4ff;
+      color: #1f5fa8;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+
+    .reservation-form-content {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 15px;
+      @media (max-width: 768px) {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .form-group {
+        flex: 1;
+        &.full-width {
+          flex: 0 0 100%;
+        }
+        label {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: 500;
+          color: #2c3e50;
+        }
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 15px;
+      margin-top: 20px;
+
+      .cancel-btn {
+        border-color: #7f8c8d;
+      }
+
+      .submit-btn {
+        background-color: #2ecc71;
+        &:hover {
+          background-color: #27ae60;
+        }
+        &.disabled {
+          background: #cccccc !important;
+          color: #666 !important;
+          cursor: not-allowed !important;
+        }
+      }
+    }
+  }
+
+  /* MUI tənzimləmələr */
+  .MuiFormLabel-root {
+    color: #2c3e50 !important;
+    font-weight: 500 !important;
+  }
+  .MuiOutlinedInput-root {
+    border-radius: 8px !important;
+  }
+  .MuiButton-root {
+    border-radius: 8px !important;
+    text-transform: none !important;
+    font-weight: 500 !important;
+    padding: 8px 16px !important;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .container {
+      padding: 20px;
+    }
+    h1 {
+      font-size: 2rem;
+    }
+    .subtitle {
+      font-size: 1rem;
+    }
+    .status-info {
+      gap: 10px;
+    }
+    .status-item {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+    .masalar-grid {
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 15px;
+    }
+    .masa {
+      height: 120px;
+      width: 120px;
+    }
+    .masa .masa-number {
+      font-size: 1.5rem;
+    }
+    .popup-content {
+      padding: 20px;
+    }
+    .popup-title {
+      font-size: 1.5rem;
+    }
+    .info-label,
+    .info-value {
+      width: 100%;
+      text-align: left;
+    }
+    .info-value {
+      margin-top: 5px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 10px;
+    .container {
+      padding: 15px;
+      width: 95%;
+    }
+    .masalar-grid {
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+    }
+    .masa {
+      height: 100px;
+      width: 100px;
+    }
+    .masa .masa-number {
+      font-size: 1.3rem;
+    }
+    .status-info {
+      flex-direction: column;
+      align-items: center;
+    }
+    .status-item {
+      width: 100%;
+      max-width: 200px;
+    }
+  }
+}

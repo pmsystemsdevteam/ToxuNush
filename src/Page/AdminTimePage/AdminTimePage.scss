@@ -1,0 +1,111 @@
+// AdminTimePage.scss
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+.admin-time-page {
+  padding: 24px;
+  margin-top: 60px;
+  margin-left: 90px;
+
+  * {
+    font-family: 'Poppins', sans-serif !important;
+  }
+
+  .page-title {
+    margin-bottom: 24px;
+    color: #333;
+    font-weight: 600;
+  }
+
+  .time-form-paper {
+    padding: 24px;
+    border-radius: 12px;
+    
+    .form-title {
+      margin-bottom: 20px;
+      color: #444;
+      display: flex;
+      align-items: center;
+      
+      .MuiSvgIcon-root {
+        margin-right: 8px;
+      }
+    }
+  }
+
+  .time-card {
+    margin-bottom: 20px;
+    border-radius: 10px;
+    transition: box-shadow 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .MuiCardContent-root {
+      padding: 20px;
+    }
+  }
+
+  .preview-paper {
+    padding: 24px;
+    border-radius: 12px;
+    height: fit-content;
+    position: sticky;
+    top: 90px;
+    
+    .preview-title {
+      color: #444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      .MuiSvgIcon-root {
+        margin-right: 8px;
+      }
+    }
+  }
+
+  .MuiTextField-root {
+    min-width: 140px;
+    
+    .MuiInputBase-input {
+      padding: 12px 14px;
+    }
+  }
+
+  .MuiButton-contained {
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    text-transform: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    
+    &:hover {
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px;
+    margin-left: 0;
+    margin-top: 50px;
+
+    .page-title {
+      font-size: 1.8rem;
+    }
+
+    .time-form-paper {
+      padding: 16px;
+    }
+
+    .preview-paper {
+      padding: 16px;
+      position: static;
+    }
+
+    .MuiTextField-root {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+  }
+}
