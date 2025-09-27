@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./AdminRoomAddPage.scss";
 
-const ROOMS_API = "https://api.albanproject.az/api/rooms/";
+const ROOMS_API = "http://192.168.0.164:8000/api/rooms/";
 
 function AdminRoomAddPage() {
   const [rooms, setRooms] = useState([]);

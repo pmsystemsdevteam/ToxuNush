@@ -29,12 +29,12 @@ import "./AdminHotelAllOrderPage.scss";
 // ===== API service (NEW endpoints) =====
 const apiService = {
   fetchOrders: () =>
-    fetch("https://api.albanproject.az/api/room-ordered/").then((r) => {
+    fetch("http://192.168.0.164:8000/api/room-ordered/").then((r) => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return r.json();
     }),
   fetchHotelRooms: () =>
-    fetch("https://api.albanproject.az/api/hotel-room-number/").then((r) => {
+    fetch("http://192.168.0.164:8000/api/hotel-room-number/").then((r) => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return r.json();
     }),

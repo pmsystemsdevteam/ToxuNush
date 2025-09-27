@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./AdminHotelPage.scss";
 
-const HOTEL_ROOM_URL = "https://api.albanproject.az/api/hotel-room-number/";
-const ROOM_ORDERED_URL = "https://api.albanproject.az/api/room-ordered/";
+const HOTEL_ROOM_URL = "http://192.168.0.164:8000/api/hotel-room-number/";
+const ROOM_ORDERED_URL = "http://192.168.0.164:8000/api/room-ordered/";
 
 function AdminHotelPage() {
   const [rooms, setRooms] = useState([]);

@@ -1,0 +1,159 @@
+/* Rənglər və ölçü dəyişənləri */
+$txt: #424242;
+$muted: #777777;
+$accent: #ffaa00;
+$accent-2: #bb560a;
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+#homePage1 {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  .frontPage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #fffefb;
+    .left {
+      height: 370px;
+      width: 200px;
+      position: absolute;
+      left: 0px;
+      bottom: 20px;
+      @media (max-width: 1300px) {
+        height: 270px;
+        width: 140px;
+      }
+      @media (max-width: 768px) {
+        height: 180px;
+        width: 100px;
+      }
+    }
+    .right {
+      height: 370px;
+      width: 200px;
+      position: absolute;
+      right: 0px;
+      top: 40px;
+      @media (max-width: 1300px) {
+        height: 270px;
+        width: 140px;
+      }
+      @media (max-width: 768px) {
+        height: 180px;
+        width: 100px;
+      }
+    }
+  }
+
+  .hero {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    min-height: inherit;
+    display: grid;
+    place-items: center;
+
+    /* tekst blok eni rahat oxunsun deyə */
+    &__content {
+      width: min(1100px, 92vw);
+      margin-inline: auto;
+      text-align: center;
+      padding: clamp(48px, 10vh, 120px) 0;
+    }
+
+    &__title {
+      color: $txt;
+      font-family: "Poppins", sans-serif;
+
+      font-weight: 700;
+      /* Desktop: ~56px, Mobile: ~28px */
+      font-size: clamp(28px, 5vw, 56px);
+      letter-spacing: 0.2px;
+      margin: 0 0 16px 0;
+    }
+
+    &__subtitle {
+      margin: 0 auto;
+      color: $muted;
+      font-family: "Poppins", sans-serif;
+
+      font-weight: 400;
+      line-height: 1.6;
+      font-size: clamp(14px, 1.6vw, 18px);
+      max-width: 700px;
+      /* şəkildəkı kimi başlıqdan bir az aşağıda */
+      margin-bottom: 28px;
+    }
+
+    &__actions {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      /* mobil-də düymələr alt-alta */
+      @media (max-width: 520px) {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+      }
+    }
+  }
+}
+
+/* Button stili */
+.btn {
+  display: flex;
+  width: 342px;
+  padding: 19px 40px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border-radius: 8px;
+  border: 2px solid #fa0;
+  background-color: transparent;
+  color: #fa0;
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  background-color: #fffefb;
+  .icon {
+    display: flex;
+    font-size: 24px;
+  }
+
+  span {
+    font-size: 17.6px;
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  @media (max-width: 520px) {
+    --btn-h: 56px;
+    width: 100%; /* mobil-də full width */
+    font-size: 16px;
+  }
+
+  &--primary {
+    color: $accent;
+    border: 1px solid $accent;
+    cursor: pointer;
+    &:hover {
+      background: $accent;
+      color: white;
+    }
+  }
+
+  &--secondary {
+    color: $accent-2;
+    border: 1px solid $accent-2;
+    cursor: pointer;
+    &:hover {
+      background: $accent-2;
+      color: white;
+    }
+  }
+}

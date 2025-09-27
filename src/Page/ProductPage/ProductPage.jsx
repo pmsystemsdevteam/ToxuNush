@@ -124,7 +124,6 @@ function ProductPage() {
 
   const addAndGo = (product) => {
     addToBasket(product);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Kateqoriya seçimi
@@ -151,18 +150,15 @@ function ProductPage() {
 
   const paginate = (n) => {
     setCurrentPage(n);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const nextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage((p) => p + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
   const prevPage = () => {
     if (currentPage > 1) {
       setCurrentPage((p) => p - 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 

@@ -3,7 +3,7 @@ import "./Navbar.scss";
 import { Link } from "react-router-dom";
 import axios from "axios";
 
-const TABLES_URL = "https://api.albanproject.az/api/tables/";
+const TABLES_URL = "http://192.168.0.164:8000/api/tables/";
 
 // Yeni açarlar
 const TABLE_KEY = "table";           // t üçün
@@ -180,6 +180,9 @@ function Navbar() {
                 <Link to={"/product"} className="nav-link">Məhsullar</Link>
               </li>
               <li className="nav-item">
+                <Link to={"/myOrder"} className="nav-link">Sifarişlər</Link>
+              </li>
+              <li className="nav-item">
                 <Link to={"/basket"} className="nav-link basket-link">
                   <i className="fas fa-shopping-basket"></i>
                   {basketCount > 0 && (
@@ -206,6 +209,9 @@ function Navbar() {
           </Link>
           <Link to={"/product"} className="mobile-link" onClick={toggleMenu}>
             Məhsullar
+          </Link>
+          <Link to={"/myOrder"} className="mobile-link" onClick={toggleMenu}>
+            Sifarişlər
           </Link>
           <Link to={"/basket"} className="mobile-link" onClick={toggleMenu}>
             Səbət

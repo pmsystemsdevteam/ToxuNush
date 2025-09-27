@@ -9,8 +9,8 @@ import { TextField, Button, Tooltip } from "@mui/material";
 import { enUS } from "date-fns/locale";
 import "./TableRezervPage.scss";
 
-const TABLES_API = "https://api.albanproject.az/api/tables/";
-const RES_API = "https://api.albanproject.az/api/reservations/";
+const TABLES_API = "http://192.168.0.164:8000/api/tables/";
+const RES_API = "http://192.168.0.164:8000/api/reservations/";
 
 /* ===== Util ===== */
 const pad2 = (n) => String(n).padStart(2, "0");

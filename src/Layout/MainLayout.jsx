@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, useParams } from "react-router-dom";
+import { Routes, Route, useParams, useLocation } from "react-router-dom";
 
 import Navbar from "./Navbar/Navbar";
 import HomePage from "../Page/HomePage/HomePage";
@@ -11,14 +11,29 @@ import RezervationPage from "../Page/RezervationPage/RezervationPage";
 import RoomRezervPage from "../Page/RoomRezervPage/RoomRezervPage";
 import TableRezervPage from "../Page/TableRezervPage/TableRezervPage";
 import OrderRoomPage from "../Page/OrderRoomPage/OrderRoomPage";
+import MyOrderPage from "../Page/MyOrderPage/MyOrderPage";
+import Navbar1 from "./Navbar/Navbar1";
+import HomePage1 from "../Page/HomePage/HomePage1";
+import ProductPage1 from "../Page/ProductPage/ProductPage1";
 
 // LocalStorage açarları
 const TABLE_KEY = "table";           // t gələndə yazılacaq
 const ROOM_KEY = "room";             // r gələndə yazılacaq
 const ACTIVE_CTX_KEY = "activeContext"; // 't' | 'r'
-// (istəsən compatibility üçün köhnələri də saxlaya bilərsən)
-// const TABLE_NUM_KEY = "tableNumber";
-// const ROOM_NUM_KEY  = "roomNumber";
+
+// Səhifə (route) dəyişdikdə yuxarı scroll et
+function ScrollToTop() {
+  const location = useLocation();
+
+  React.useEffect(() => {
+    // Əgər in-page anchor (#section) yoxdursa, yuxarı qalx
+    if (!location.hash) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [location.pathname, location.search, location.hash]);
+
+  return null;
+}
 
 // "/:slug" (məs: 4t, 12r) gəldikdə localStorage-ə yazır,
 // amma həmişə HomePage göstərir.
@@ -38,7 +53,6 @@ function HomeRouteBridge() {
     if (kind === "t") {
       localStorage.setItem(TABLE_KEY, String(num));
       localStorage.setItem(ACTIVE_CTX_KEY, "table");
-      // digər konteksti təmizlə
       localStorage.removeItem(ROOM_KEY);
     } else if (kind === "r") {
       localStorage.setItem(ROOM_KEY, String(num));
@@ -50,14 +64,18 @@ function HomeRouteBridge() {
     window.dispatchEvent(new Event("ctx_changed"));
   }, [slug]);
 
-  return <HomePage />;
+  return <HomePage1 />;
 }
 
 function MainLayout() {
   return (
     <div className="main-layout">
-      <Navbar />
-      <BasketPopUp />
+      {/* Route dəyişəndə yuxarı scroll */}
+      <ScrollToTop />
+
+      {/* <Navbar /> */}
+      <Navbar1/>
+      {/* <BasketPopUp /> */}
       <main className="main-content">
         <Routes>
           {/* Normal giriş: Home */}
@@ -73,8 +91,9 @@ function MainLayout() {
           <Route path="/order" element={<OrderRoomPage />} />
 
           {/* Digər səhifələr */}
-          <Route path="/product" element={<ProductPage />} />
+          <Route path="/product" element={<ProductPage1 />} />
           <Route path="/basket" element={<BasketPage />} />
+          <Route path="/myOrder" element={<MyOrderPage />} />
         </Routes>
       </main>
       <Footer />

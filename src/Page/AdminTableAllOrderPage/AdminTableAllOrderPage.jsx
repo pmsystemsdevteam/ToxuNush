@@ -41,11 +41,11 @@ import "./AdminTableAllOrderPage.scss";
 // API service functions
 const apiService = {
   fetchBaskets: () =>
-    fetch("https://api.albanproject.az/api/baskets/").then((r) => r.json()),
+    fetch("http://192.168.0.164:8000/api/baskets/").then((r) => r.json()),
   fetchTables: () =>
-    fetch("https://api.albanproject.az/api/tables/").then((r) => r.json()),
+    fetch("http://192.168.0.164:8000/api/tables/").then((r) => r.json()),
   fetchReservations: () =>
-    fetch("https://api.albanproject.az/api/reservations/").then((r) => r.json()),
+    fetch("http://192.168.0.164:8000/api/reservations/").then((r) => r.json()),
 };
 
 function TabPanel({ children, value, index, ...other }) {

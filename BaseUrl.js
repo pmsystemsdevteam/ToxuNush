@@ -1,1 +1,1 @@
-export const baseUrl = "https://api.albanproject.az/"; 
+export const baseUrl = "http://192.168.0.164:8000/"; 

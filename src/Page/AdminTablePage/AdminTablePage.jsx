@@ -2,10 +2,10 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import "./AdminTablePage.scss";
 
-const TABLES_URL = "https://api.albanproject.az/api/tables/";
-const BASKETS_URL = "https://api.albanproject.az/api/baskets/";
-const RESERVATIONS_URL = "https://api.albanproject.az/api/reservations/";
-const SOON_THRESHOLD_MIN = 5; // başlanğıca qalan dəqiqə (vizual dalğa/animasiya)
+const TABLES_URL = "http://192.168.0.164:8000/api/tables/";
+const BASKETS_URL = "http://192.168.0.164:8000/api/baskets/";
+const RESERVATIONS_URL = "http://192.168.0.164:8000/api/reservations/";
+const SOON_THRESHOLD_MIN = 5;
 
 /* ================= Utils ================= */
 const pad2 = (n) => String(n).padStart(2, "0");
@@ -38,7 +38,6 @@ const todayYMD = () => {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 };
 const parseTimeRange = (range) => {
-  // "HH:MM-HH:MM" -> {startMin,endMin} else null
   const s = String(range || "");
   const parts = s.split("-");
   if (parts.length !== 2) return null;
@@ -64,47 +63,79 @@ const toYMDfromISO = (iso) => {
 };
 
 /* ================= Status maps (server <-> UI) ================= */
+// QƏBUL OLUNAN statusların dəstəsi (backend enum-u ilə uyğundur)
+const ALLOWED_STATUSES = [
+  "empty",
+  "reserved",
+  "waitingFood",
+  "waitingWaiter",
+  "waitingBill",
+  "sendOrder",
+  "sendKitchen",
+  "makeFood",
+  "deliveredFood",
+];
+
+// UI-də görünmə ardıcıllığı
+const STATUS_ORDER = [
+  "empty",
+  "waitingFood",
+  "waitingWaiter",
+  "sendOrder",
+  "sendKitchen",
+  "makeFood",
+  "deliveredFood",
+  "reserved",
+];
+
 const normalizeStatus = (raw) => {
   if (!raw) return "empty";
-  if (raw === "occupied" || raw === "served") return "ordered"; // köhnə uyğunluq
-  if (raw === "waitingWaite") return "waitingWaiter"; // yazılış xətası üçün uyğunluq
-  const allowed = [
-    "empty",
-    "reserved",
-    "ordered",
-    "waitingFood",
-    "waitingWaiter",
-    "waitingBill",
-  ];
-  return allowed.includes(raw) ? raw : "empty";
+  if (raw === "waitingWaite") return "waitingWaiter";
+  if (raw === "ordered") return "sendOrder";
+  return ALLOWED_STATUSES.includes(raw) ? raw : "empty";
 };
+
 const statusToServer = (ui) => {
   const map = {
     empty: "empty",
     reserved: "reserved",
-    ordered: "ordered",
     waitingFood: "waitingFood",
     waitingWaiter: "waitingWaiter",
     waitingBill: "waitingBill",
+    sendOrder: "sendOrder",
+    sendKitchen: "sendKitchen",
+    makeFood: "makeFood",
+    deliveredFood: "deliveredFood",
   };
   return map[ui] || "empty";
 };
+
 const statusNames = {
   empty: "Boş",
   reserved: "Rezerv",
-  ordered: "Sifariş",
-  waitingFood: "Yemək Gözləyir",
-  waitingWaiter: "Ofisiant Gözləyir",
-  waitingBill: "Hesab Gözləyir",
+  waitingFood: "Yemək gözləyir",
+  waitingWaiter: "Ofisiant gözləyir",
+  waitingBill: "Hesab gözləyir",
+  sendOrder: "Sifariş göndərildi",
+  sendKitchen: "Yemək mətbəxə göndərildi",
+  makeFood: "Yemək hazırlanır",
+  deliveredFood: "Yemək təhvil verildi",
 };
+
 const statusColors = {
   empty: "#CCCCCC",
   reserved: "#ee0d0dff",
-  ordered: "#4CAF50",
   waitingFood: "#f38722ff",
   waitingWaiter: "#FFEB3B",
-  waitingBill: "#3bd5ffff",
+  waitingBill: "#3bd5ff",
+  sendOrder: "#4CAF50",
+  sendKitchen: "#2196F3",
+  makeFood: "#9C27B0",
+  deliveredFood: "#8BC34A",
 };
+
+// ✅ Yalnız bu statuslar manual dəyişdirilə bilər və bu ardıcıllıqla göstərilir
+const ADMIN_MUTABLE = ["empty", "sendKitchen", "deliveredFood"];
 
 function AdminTablePage() {
   const [tables, setTables] = useState([]);
@@ -116,16 +147,16 @@ function AdminTablePage() {
     type: "info",
   });
 
-  const [selectedId, setSelectedId] = useState(null); // backend table id
+  const [selectedId, setSelectedId] = useState(null);
   const selectedTable = useMemo(
     () => tables.find((t) => t.id === selectedId) || null,
     [tables, selectedId]
   );
 
-  // Rezerv formu (manual rezerv yaratmaq üçün)
+  // Rezerv formu
   const [resvDate, setResvDate] = useState(todayYMD());
-  const [resvStart, setResvStart] = useState(""); // "HH:MM"
-  const [resvEnd, setResvEnd] = useState(""); // "HH:MM"
+  const [resvStart, setResvStart] = useState("");
+  const [resvEnd, setResvEnd] = useState("");
   const [resvCustomer, setResvCustomer] = useState("");
   const [resvPhone, setResvPhone] = useState("");
 
@@ -141,8 +172,7 @@ function AdminTablePage() {
   const [showOrdersPopup, setShowOrdersPopup] = useState(false);
   const [ordersForTable, setOrdersForTable] = useState([]);
 
-  // Auto PATCH/POST-ları spam etməmək üçün qoruyucu (per table, per status)
-  const autoOpsRef = useRef({}); // { [tableId]: { lastStatus: 'reserved'|'empty', ts: number } }
+  const autoOpsRef = useRef({});
 
   const showNote = (message, type = "info") => {
     setNotification({ show: true, message, type });
@@ -153,7 +183,6 @@ function AdminTablePage() {
   };
 
   const buildTablesModel = (tablesApi, basketsApi) => {
-    // son basket total-ı
     const latestBasketByTable = new Map();
     for (const b of basketsApi || []) {
       const tid = b?.table?.id;
@@ -171,7 +200,6 @@ function AdminTablePage() {
         const status = normalizeStatus(t.status);
         const res = Array.isArray(t.reservations) ? t.reservations.slice() : [];
 
-        // gələcək ən yaxın rezerv label (lazım olsa istifadə edərik)
         const futureRes = res
           .filter((r) => r.date >= today)
           .sort((a, b) =>
@@ -182,9 +210,7 @@ function AdminTablePage() {
           );
         const nextLabel = futureRes[0]
           ? `${
-              futureRes[0].date === today
-                ? "Bu gün"
-                : toAzDate(futureRes[0].date)
+              futureRes[0].date === today ? "Bu gün" : toAzDate(futureRes[0].date)
             } ${futureRes[0].reserved_time}`
           : "";
 
@@ -231,7 +257,6 @@ function AdminTablePage() {
 
   const openTable = (backendId) => {
     setSelectedId(backendId);
-    // rezerv formunu default dəyərlərə gətir
     setResvDate(todayYMD());
     setResvStart("");
     setResvEnd("");
@@ -243,45 +268,58 @@ function AdminTablePage() {
     setSelectedId(null);
   };
 
-  /* ====== STATUS SYNC HELPERS (PATCH -> POST fallback) ====== */
-  const patchTableStatus = (backendId, serverStatus) =>
-    axios.patch(
-      `${TABLES_URL}${backendId}/`,
-      { status: serverStatus },
-      { headers: { "Content-Type": "application/json" } }
-    );
+  /* ====== STATUS SYNC HELPERS (YALNIZ PUT) ====== */
+  const getTableSnapshot = (tableId) => {
+    const t = tables.find((x) => x.id === tableId);
+    if (!t) throw new Error("Masa tapılmadı");
+    return t;
+  };
 
-  const postTableStatus = (backendId, serverStatus) =>
-    axios.post(
-      TABLES_URL,
-      { id: backendId, status: serverStatus },
+  const putTableStatus = (tableSnap, serverStatus) =>
+    axios.put(
+      `${TABLES_URL}${tableSnap.id}/`,
+      {
+        table_num: tableSnap.number,
+        chair_number: tableSnap.chairNumber ?? 4,
+        status: serverStatus,
+      },
       { headers: { "Content-Type": "application/json" } }
     );
 
   const setTableStatusOnServer = async (tableId, nextStatusUI) => {
     const serverStatus = statusToServer(nextStatusUI);
-    try {
-      await patchTableStatus(tableId, serverStatus);
-    } catch (e) {
-      // PATCH alınmadısa, tələbinizə uyğun POST fallback
-      await postTableStatus(tableId, serverStatus);
-    }
+    const snap = getTableSnapshot(tableId);
+    await putTableStatus(snap, serverStatus);
   };
 
-  const postBasketNote = (backendId, statusUI, reservedTimeText = "") => {
+  /* ====== BASKET NOTE: CREATE əvəzinə EDIT ====== */
+  const getLatestBasketIdForTable = (tableId) => {
+    const rows = (allBaskets || [])
+      .filter((b) => b?.table?.id === tableId)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    return rows[0]?.id ?? null;
+  };
+
+  const patchBasketNote = (basketId, note) =>
+    axios.patch(
+      `${BASKETS_URL}${basketId}/`,
+      { note },
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+  const updateLatestBasketNoteForStatus = async (
+    tableId,
+    statusUI,
+    reservedTimeText = ""
+  ) => {
+    const basketId = getLatestBasketIdForTable(tableId);
+    if (!basketId) return;
     const extra =
       statusUI === "reserved" && reservedTimeText
         ? ` | Rezerv vaxtı: ${reservedTimeText}`
         : "";
-    const payload = {
-      table_id: backendId,
-      note: `Status: ${statusNames[statusUI] || statusUI}${extra}`,
-      service_cost: "2.50",
-      items: [],
-    };
-    return axios.post(BASKETS_URL, {
-      ...payload,
-    });
+    const note = `Status: ${statusNames[statusUI] || statusUI}${extra}`;
+    await patchBasketNote(basketId, note);
   };
 
   const validateReservationForm = () => {
@@ -290,7 +328,6 @@ function AdminTablePage() {
     if (!resvEnd) return "Bitmə saatını seçin.";
     if (!resvCustomer) return "Müştəri adını yazın.";
     if (!resvPhone) return "Telefon nömrəsini yazın.";
-
     const rng = parseTimeRange(`${resvStart}-${resvEnd}`);
     if (!rng || rng.startMin >= rng.endMin) {
       return "Saat intervalı səhvdir. (məs: 12:00-16:00)";
@@ -319,8 +356,12 @@ function AdminTablePage() {
     return reserved_time;
   };
 
-  // Manual status change (reserved burada yoxdur — rezerv formu və auto-sync ilə örtürük)
+  // ✅ Yalnız icazəli 3 statusu dəyiş
   const changeTableStatus = async (tableBackendId, newStatusUI) => {
+    if (!ADMIN_MUTABLE.includes(newStatusUI)) {
+      showNote("Bu statusu əl ilə dəyişmək icazəli deyil.", "error");
+      return;
+    }
     const prev = tables.find((t) => t.id === tableBackendId);
     if (!prev) return;
     setSyncingId(tableBackendId);
@@ -340,7 +381,7 @@ function AdminTablePage() {
       );
 
       await setTableStatusOnServer(tableBackendId, newStatusUI);
-      await postBasketNote(tableBackendId, newStatusUI, "");
+      await updateLatestBasketNoteForStatus(tableBackendId, newStatusUI, "");
 
       await loadAll();
       showNote("Əməliyyat yerinə yetirildi.", "success");
@@ -403,36 +444,7 @@ function AdminTablePage() {
     return { activeNow, startingSoon, dynamicLabel };
   };
 
-  /* ====== AUTO SYNC: rezerv başlayanda → reserved; bitəndə → empty ======
-     Tələbinizə uyğun olaraq, başlanğıcda MASA HANSI STATUSDA OLSA DA reserved edilir,
-     bitəndə isə empty edilir.
-  */
-  const safeAutoSetStatus = async (tableId, nextStatus) => {
-    const key = String(tableId);
-    const now = Date.now();
-    const guard = autoOpsRef.current[key] || { lastStatus: null, ts: 0 };
-    if (guard.lastStatus === nextStatus && now - guard.ts < 60000) {
-      return; // 60s içində eyni statusa yenidən getməyək
-    }
-    autoOpsRef.current[key] = { lastStatus: nextStatus, ts: now };
-
-    // Local optimistic
-    setTables((p) =>
-      p.map((t) =>
-        t.id === tableId
-          ? { ...t, status: nextStatus, color: statusColors[nextStatus] || t.color }
-          : t
-      )
-    );
-
-    try {
-      await setTableStatusOnServer(tableId, nextStatus);
-    } catch (err) {
-      console.warn("Auto status sync failed:", err?.message || err);
-    }
-  };
-
-  // Hər 15 saniyədə bir masaların zamanla uyğun statusunu serverlə sinxronlaşdırırıq
+  // Auto sync: rezerv başlayanda → reserved; bitəndə → empty (digərlərinə toxunma)
   useEffect(() => {
     if (!tables || tables.length === 0) return;
     const today = todayYMD();
@@ -451,12 +463,10 @@ function AdminTablePage() {
       }
 
       if (activeNow) {
-        // başladıqda -> mütləq reserved
-        if (t.status !== "reserved") {
+        if (t.status === "empty") {
           safeAutoSetStatus(t.id, "reserved");
         }
       } else {
-        // bitəndən sonra -> reserved idisə empty et
         if (t.status === "reserved") {
           safeAutoSetStatus(t.id, "empty");
         }
@@ -464,6 +474,30 @@ function AdminTablePage() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nowTick, tables]);
+
+  const safeAutoSetStatus = async (tableId, nextStatus) => {
+    const key = String(tableId);
+    const now = Date.now();
+    const guard = autoOpsRef.current[key] || { lastStatus: null, ts: 0 };
+    if (guard.lastStatus === nextStatus && now - guard.ts < 60000) {
+      return;
+    }
+    autoOpsRef.current[key] = { lastStatus: nextStatus, ts: now };
+
+    setTables((p) =>
+      p.map((t) =>
+        t.id === tableId
+          ? { ...t, status: nextStatus, color: statusColors[nextStatus] || t.color }
+          : t
+      )
+    );
+
+    try {
+      await setTableStatusOnServer(tableId, nextStatus);
+    } catch (err) {
+      console.warn("Auto status PUT failed:", err?.message || err);
+    }
+  };
 
   const openOrdersPopup = (tbl) => {
     const rows = allBaskets
@@ -483,31 +517,19 @@ function AdminTablePage() {
           </button>
         </div>
       </div>
- <div className="legend">
+
+      <div className="legend">
         <h2>Rəng Kodları</h2>
         <div className="legend-items">
-          <Legend color={statusColors.empty} label={statusNames.empty} />
-          <Legend color={statusColors.reserved} label={statusNames.reserved} />
-          <Legend color={statusColors.ordered} label={statusNames.ordered} />
-          <Legend
-            color={statusColors.waitingFood}
-            label={statusNames.waitingFood}
-          />
-          <Legend
-            color={statusColors.waitingWaiter}
-            label={statusNames.waitingWaiter}
-          />
-          <Legend
-            color={statusColors.waitingBill}
-            label={statusNames.waitingBill}
-          />
+          {STATUS_ORDER.map((key) => (
+            <Legend key={key} color={statusColors[key]} label={statusNames[key]} />
+          ))}
         </div>
       </div>
+
       <div className="tables-container">
         {tables.map((t) => {
-          // canlı indikatorlar
-          // eslint-disable-next-line no-unused-vars
-          const _tick = nowTick; // yalnız rerender üçün
+          const _tick = nowTick; // rerender üçün
           const { activeNow, startingSoon } = computeRuntimeFlags(t);
           const bgColor = activeNow ? statusColors.reserved : t.color;
 
@@ -518,9 +540,7 @@ function AdminTablePage() {
               onClick={() => openTable(t.id)}
             >
               <div
-                className={`table ${
-                  activeNow ? "active-now" : startingSoon ? "starting-soon" : ""
-                }`}
+                className={`table ${activeNow ? "active-now" : startingSoon ? "starting-soon" : ""}`}
                 style={{ backgroundColor: bgColor }}
               >
                 <div className="table-number">{t.number}</div>
@@ -548,14 +568,12 @@ function AdminTablePage() {
 
             <h2 className="popup-title">Masa {selectedTable.number}</h2>
 
-            {/* FLEX + SCROLL bədən */}
             <div className="popup-body">
               <div className="status-info">
                 <div
                   className="status-color"
                   style={{
-                    backgroundColor:
-                      statusColors[selectedTable.status] || "#ccc",
+                    backgroundColor: statusColors[selectedTable.status] || "#ccc",
                   }}
                 />
                 <span>Status: {statusNames[selectedTable.status]}</span>
@@ -569,7 +587,6 @@ function AdminTablePage() {
                   </span>
                 </div>
 
-                {/* Boş olanda gizlət */}
                 {selectedTable.status !== "empty" && (
                   <>
                     <div className="info-row">
@@ -620,7 +637,7 @@ function AdminTablePage() {
                 </div>
               </div>
 
-              {/* REZERV FORMU (manual yaratmaq üçün) */}
+              {/* REZERV FORMU (olduğu kimi qalır) */}
               <div className="reservation-form">
                 <div className="form-grid">
                   <div className="form-group">
@@ -673,14 +690,9 @@ function AdminTablePage() {
                     onClick={async () => {
                       try {
                         setSyncingId(selectedTable.id);
-                        const reservedTime = await createReservation(
-                          selectedTable
-                        );
+                        const reservedTime = await createReservation(selectedTable);
                         await loadAll();
-                        showNote(
-                          `Rezerv yaradıldı (${reservedTime}).`,
-                          "success"
-                        );
+                        showNote(`Rezerv yaradıldı (${reservedTime}).`, "success");
                       } catch (e) {
                         /* error artıq bildirilib */
                       } finally {
@@ -694,69 +706,24 @@ function AdminTablePage() {
                 </div>
               </div>
 
-              {/* Status düymələri (reserved yoxdur — auto & rezerv formu ilə yenilənir) */}
+              {/* ✅ Status düymələri — yalnız 3 icazəli status və düzgün ardıcıllıq */}
               <div className="status-controls">
                 <h3>Statusu Dəyişdir</h3>
                 <div className="status-buttons">
-                  <button
-                    onClick={() => changeTableStatus(selectedTable.id, "empty")}
-                    className={selectedTable.status === "empty" ? "active" : ""}
-                    disabled={syncingId === selectedTable.id}
-                  >
-                    Boş
-                  </button>
-                  <button
-                    onClick={() =>
-                      changeTableStatus(selectedTable.id, "ordered")
-                    }
-                    className={
-                      selectedTable.status === "ordered" ? "active" : ""
-                    }
-                    disabled={syncingId === selectedTable.id}
-                  >
-                    Sifariş
-                  </button>
-                  <button
-                    onClick={() =>
-                      changeTableStatus(selectedTable.id, "waitingFood")
-                    }
-                    className={
-                      selectedTable.status === "waitingFood" ? "active" : ""
-                    }
-                    disabled={syncingId === selectedTable.id}
-                  >
-                    Yemək Gözləyir
-                  </button>
-                  <button
-                    onClick={() =>
-                      changeTableStatus(selectedTable.id, "waitingWaiter")
-                    }
-                    className={
-                      selectedTable.status === "waitingWaiter" ? "active" : ""
-                    }
-                    disabled={syncingId === selectedTable.id}
-                  >
-                    Ofisiant Gözləyir
-                  </button>
-                  <button
-                    onClick={() =>
-                      changeTableStatus(selectedTable.id, "waitingBill")
-                    }
-                    className={
-                      selectedTable.status === "waitingBill" ? "active" : ""
-                    }
-                    disabled={syncingId === selectedTable.id}
-                  >
-                    Hesab Gözləyir
-                  </button>
+                  {ADMIN_MUTABLE.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => changeTableStatus(selectedTable.id, s)}
+                      className={selectedTable.status === s ? "active" : ""}
+                      disabled={syncingId === selectedTable.id}
+                    >
+                      {statusNames[s]}
+                    </button>
+                  ))}
                 </div>
-                {syncingId === selectedTable.id && (
-                  <p className="hint">Yazılır...</p>
-                )}
               </div>
             </div>
 
-            {/* Alt sabit düymə */}
             <div className="popup-footer">
               <button
                 className="submit-btn"
@@ -770,7 +737,6 @@ function AdminTablePage() {
         </div>
       )}
 
-      {/* Sifarişlər popupu */}
       {showOrdersPopup && (
         <div
           className="popup-overlay"
@@ -778,10 +744,7 @@ function AdminTablePage() {
           onClick={() => setShowOrdersPopup(false)}
         >
           <div className="table-popup" onClick={(e) => e.stopPropagation()}>
-            <button
-              className="close-btn"
-              onClick={() => setShowOrdersPopup(false)}
-            >
+            <button className="close-btn" onClick={() => setShowOrdersPopup(false)}>
               ×
             </button>
             <h2>Masa {selectedTable?.number} — Sifarişlər</h2>
@@ -806,8 +769,7 @@ function AdminTablePage() {
                           <strong>Status:</strong> {stName}
                         </span>
                         <span>
-                          <strong>Gün:</strong>{" "}
-                          {resv ? toAzDate(resv.date) : "—"}
+                          <strong>Gün:</strong> {resv ? toAzDate(resv.date) : "—"}
                         </span>
                         <span>
                           <strong>Saat:</strong> {resv?.reserved_time || "—"}
@@ -828,10 +790,7 @@ function AdminTablePage() {
                                 {it.count} × {it.name_az}
                               </span>
                               <span>
-                                {(Number(it.cost) * Number(it.count)).toFixed(
-                                  2
-                                )}
-                                ₼
+                                {(Number(it.cost) * Number(it.count)).toFixed(2)}₼
                               </span>
                             </li>
                           ))}
@@ -845,9 +804,6 @@ function AdminTablePage() {
           </div>
         </div>
       )}
-
-      {/* Legend */}
-     
 
       {notification.show && (
         <div className={`notification ${notification.type}`}>

@@ -3,8 +3,8 @@ import "./AdminProductPage.scss";
 import { Link } from "react-router-dom";
 import axios from "axios";
 
-const PRODUCTS_URL   = "https://api.albanproject.az/api/products/";
-const CATEGORIES_URL = "https://api.albanproject.az/api/categories/";
+const PRODUCTS_URL   = "http://192.168.0.164:8000/api/products/";
+const CATEGORIES_URL = "http://192.168.0.164:8000/api/categories/";
 
 function AdminProductPage() {
   const [products, setProducts] = useState([]);

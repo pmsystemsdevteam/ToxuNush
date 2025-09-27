@@ -22,7 +22,7 @@ import {
 import axios from "axios";
 import "./AdminTimePage.scss";
 
-const API_URL = "https://api.albanproject.az/api/restoranttime/";
+const API_URL = "http://192.168.0.164:8000/api/restoranttime/";
 
 const hhmm = (s) => (s ? String(s).slice(0, 5) : "");
 const toHHMMSS = (s) => {

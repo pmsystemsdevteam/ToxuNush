@@ -285,7 +285,6 @@ $info-color: #3498db;
   /* 2) Tövsiyələr (Əlaqəli / Digər) */
   .suggestions-section {
     margin-top: 2rem;
-    padding: 1.2rem 1rem;
     background: transparent;
     &.alt {
       margin-top: 1rem;
@@ -310,7 +309,7 @@ $info-color: #3498db;
 
     .carousel {
       position: relative;
-      padding: 0 2.6rem;
+      // padding: 0 2.6rem;
 
       .scroll-btn {
         position: absolute;
@@ -365,7 +364,7 @@ $info-color: #3498db;
         }
 
         .suggestion-card {
-          min-width: 220px;
+          min-width: 100%;
           max-width: 240px;
           background: #fff;
           border-radius: 12px;

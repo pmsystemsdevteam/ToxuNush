@@ -3,8 +3,8 @@ import "./AdminEditPage.scss";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 
-const PRODUCTS_URL = "https://api.albanproject.az/api/products/";
-const CATEGORIES_URL = "https://api.albanproject.az/api/categories/";
+const PRODUCTS_URL = "http://192.168.0.164:8000/api/products/";
+const CATEGORIES_URL = "http://192.168.0.164:8000/api/categories/";
 
 function AdminEditPage() {
   const { id } = useParams();
