@@ -88,7 +88,6 @@ const products = [
 function ProductPage1() {
   return (
     <div className="productPage1">
-      {/* Dekorasiya şəkilləri */}
       <img src={Left} className="left" alt="left-decor" />
       <img src={Right} className="right" alt="right-decor" />
 
