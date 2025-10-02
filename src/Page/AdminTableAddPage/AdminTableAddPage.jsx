@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./AdminTableAddPage.scss";
 
-const TABLES_API = "http://192.168.0.164:8000/api/tables/";
+const TABLES_API = "http://172.20.5.167:8001/api/tables/";
 
 function AdminTableAddPage() {
   const [tables, setTables] = useState([]);

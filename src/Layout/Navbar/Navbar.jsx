@@ -3,7 +3,7 @@ import "./Navbar.scss";
 import { Link } from "react-router-dom";
 import axios from "axios";
 
-const TABLES_URL = "http://192.168.0.164:8000/api/tables/";
+const TABLES_URL = "http://172.20.5.167:8001/api/tables/";
 
 // Yeni açarlar
 const TABLE_KEY = "table";           // t üçün

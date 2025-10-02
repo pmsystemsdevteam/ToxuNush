@@ -52,7 +52,7 @@
     }
 
     @media (max-width: 576px) {
-      padding: 20px 15px;
+      padding: 20px 5px;
     }
 
     .title {
@@ -135,8 +135,8 @@
       margin-top: 30px;
 
       @media (max-width: 576px) {
-        grid-template-columns: 1fr;
-        gap: 16px;
+        grid-template-columns: auto auto;
+        gap: 5px;
       }
 
       .product-card {
@@ -150,6 +150,8 @@
         display: flex;
         flex-direction: column;
         @media (max-width: 576px) {
+          width: 150px;
+          height: 210px;
         }
         &:hover {
           transform: translateY(-5px);
@@ -160,6 +162,9 @@
           width: 100%;
           height: 180px;
           object-fit: cover;
+          @media (max-width: 576px) {
+            height: 120px;
+          }
         }
 
         .info {
@@ -169,13 +174,22 @@
           gap: 6px;
           width: 100%;
           padding: 16px;
-
+          height: 60px;
+          @media (max-width: 576px) {
+            padding: 10px;
+          }
           h3 {
             color: rgba(0, 0, 0, 0.8);
             font-family: "Poppins", sans-serif;
             font-size: 16px;
             font-weight: 600;
             text-align: start;
+            @media (max-width: 576px) {
+              font-size: 10px;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
           }
 
           p {
@@ -184,6 +198,12 @@
             font-size: 14px;
             text-align: start;
             font-weight: 400;
+            @media (max-width: 576px) {
+              font-size: 8px;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
           }
 
           .price {
@@ -191,6 +211,10 @@
             font-family: "Poppins", sans-serif;
             font-size: 18px;
             font-weight: 700;
+
+            @media (max-width: 576px) {
+              font-size: 10px;
+            }
           }
         }
 
@@ -209,7 +233,10 @@
           align-items: center;
           justify-content: center;
           font-family: "Poppins", sans-serif;
-
+          @media (max-width: 576px) {
+            font-size: 10px;
+            margin: 2px auto 16px;
+          }
           .icon {
             margin-left: 10px;
             transition: transform 0.2s;

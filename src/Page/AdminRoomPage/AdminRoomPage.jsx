@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import "./AdminRoomPage.scss";
 
-const ROOMS_URL = "http://192.168.0.164:8000/api/rooms/";
-const ROOM_RESERVATIONS_URL = "http://192.168.0.164:8000/api/room-reservations/";
+const ROOMS_URL = "http://172.20.5.167:8001/api/rooms/";
+const ROOM_RESERVATIONS_URL = "http://172.20.5.167:8001/api/room-reservations/";
 const SOON_THRESHOLD_MIN = 5;
 
 /* ================= Utils ================= */

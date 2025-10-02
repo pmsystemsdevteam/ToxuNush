@@ -9,8 +9,8 @@ import { TextField, Button, Tooltip } from "@mui/material";
 import { enUS } from "date-fns/locale";
 import "./TableRezervPage.scss";
 
-const TABLES_API = "http://192.168.0.164:8000/api/tables/";
-const RES_API = "http://192.168.0.164:8000/api/reservations/";
+const TABLES_API = "http://172.20.5.167:8001/api/tables/";
+const RES_API = "http://172.20.5.167:8001/api/reservations/";
 
 /* ===== Util ===== */
 const pad2 = (n) => String(n).padStart(2, "0");

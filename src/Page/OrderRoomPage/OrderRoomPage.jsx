@@ -19,7 +19,7 @@ const ROOM_ORDER_KEY = "roomOrder";
 const PREFILL_KEY = "prefillCustomerForm";
 
 // API
-const ROOMS_API = "http://192.168.0.164:8000/api/hotel-room-number/";
+const ROOMS_API = "http://172.20.5.167:8001/api/hotel-room-number/";
 
 function OrderRoomPage() {
   const [formData, setFormData] = useState({

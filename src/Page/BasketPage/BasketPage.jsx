@@ -18,12 +18,12 @@ const TABLES_URL   = `${baseUrl}/api/tables/`;
 const ROOMS_URL    = `${baseUrl}/api/rooms/`;
 
 // YENİ: Otel otaqları (hotel-room-number)
-const HOTEL_ROOMS_URL = "http://192.168.0.164:8000/api/hotel-room-number/";
+const HOTEL_ROOMS_URL = "http://172.20.5.167:8001/api/hotel-room-number/";
 
 // Sifariş POST-ları
-const TABLE_BASKETS_POST_URL = "http://192.168.0.164:8000/api/baskets/";
-// const ROOM_BASKETS_POST_URL  = "http://192.168.0.164:8000/api/room-baskets/"; // istifadə etmirik
-const ROOM_ORDERED_POST_URL  = "http://192.168.0.164:8000/api/room-ordered/";   // yeni API (hotel_room tələb edir)
+const TABLE_BASKETS_POST_URL = "http://172.20.5.167:8001/api/baskets/";
+// const ROOM_BASKETS_POST_URL  = "http://172.20.5.167:8001/api/room-baskets/"; // istifadə etmirik
+const ROOM_ORDERED_POST_URL  = "http://172.20.5.167:8001/api/room-ordered/";   // yeni API (hotel_room tələb edir)
 
 // ==== Səbət açarı və servis haqqı ====
 const BASKET_KEY = "basket";

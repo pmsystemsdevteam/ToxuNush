@@ -32,7 +32,7 @@ import { enUS } from "date-fns/locale";
 import { FaChair, FaUtensils } from "react-icons/fa";
 import "./AdminRoomRezervPage.scss";
 import { MdChair } from "react-icons/md";
-const API_URL = "http://192.168.0.164:8000/api/room-reservations/";
+const API_URL = "http://172.20.5.167:8001/api/room-reservations/";
 
 const AdminRoomRezervPage = () => {
   const [reservations, setReservations] = useState([]);

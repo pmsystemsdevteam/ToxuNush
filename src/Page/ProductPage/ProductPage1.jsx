@@ -1,115 +1,52 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./ProductPage1.scss";
+import axios from "axios";
 
-// dekorasiya üçün şəkillər
 import Left from "../../Image/MenuLeft.png";
 import Right from "../../Image/MenuRight.png";
 import { IoIosArrowRoundForward } from "react-icons/io";
 
-const categories = [
-  "Hamısı",
-  "Əsas Yeməklər",
-  "Salatlar",
-  "Şorbalar",
-  "Şirniyyatlar",
-  "İçkilər",
-  "İçkilər",
-  "İçkilər",
-  "İçkilər",
-];
-
-const products = [
-  {
-    id: 1,
-    name: "Dolma",
-    desc: "isti, ət",
-    price: "8.00 AZN",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnrPHq7um_b7tNpwVrv4qMpnQL9TWFXhWNPA&s",
-  },
-  {
-    id: 1,
-    name: "Dolma",
-    desc: "isti, ət",
-    price: "8.00 AZN",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnrPHq7um_b7tNpwVrv4qMpnQL9TWFXhWNPA&s",
-  },
-  {
-    id: 1,
-    name: "Dolma",
-    desc: "isti, ət",
-    price: "8.00 AZN",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnrPHq7um_b7tNpwVrv4qMpnQL9TWFXhWNPA&s",
-  },
-  {
-    id: 1,
-    name: "Dolma",
-    desc: "isti, ət",
-    price: "8.00 AZN",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnrPHq7um_b7tNpwVrv4qMpnQL9TWFXhWNPA&s",
-  },
-  {
-    id: 2,
-    name: "Sezar salatı",
-    desc: "tərəvəz, toyuq",
-    price: "8.00 AZN",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnrPHq7um_b7tNpwVrv4qMpnQL9TWFXhWNPA&s",
-  },
-  {
-    id: 3,
-    name: "Mərci şorbası",
-    desc: "vegan, isti",
-    price: "4.00 AZN",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnrPHq7um_b7tNpwVrv4qMpnQL9TWFXhWNPA&s",
-  },
-  {
-    id: 4,
-    name: "Kabab",
-    desc: "isti, ət",
-    price: "15.00 AZN",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnrPHq7um_b7tNpwVrv4qMpnQL9TWFXhWNPA&s",
-  },
-  {
-    id: 5,
-    name: "Limonad",
-    desc: "içki, sərin",
-    price: "6.00 AZN",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnrPHq7um_b7tNpwVrv4qMpnQL9TWFXhWNPA&s",
-  },
-  {
-    id: 6,
-    name: "Türk paxlavası",
-    desc: "desert, şirin",
-    price: "6.00 AZN",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnrPHq7um_b7tNpwVrv4qMpnQL9TWFXhWNPA&s",
-  },
-  {
-    id: 7,
-    name: "Snikers tortu",
-    desc: "desert, qozlu",
-    price: "6.00 AZN",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnrPHq7um_b7tNpwVrv4qMpnQL9TWFXhWNPA&s",
-  },
-  {
-    id: 8,
-    name: "Çay",
-    desc: "içki, isti",
-    price: "4.00 AZN",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnrPHq7um_b7tNpwVrv4qMpnQL9TWFXhWNPA&s",
-  },
-];
+const API_BASE = "http://172.20.5.167:8001/api";
 
 function ProductPage1() {
+  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(8); // 🔹 ilk 8 göstər
+
+  // 🔹 API-dən məlumat çəkmək
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [catRes, prodRes] = await Promise.all([
+          axios.get(`${API_BASE}/categories/`),
+          axios.get(`${API_BASE}/products/`),
+        ]);
+        setCategories([{ id: "all", name_az: "Hamısı" }, ...catRes.data]);
+        setProducts(prodRes.data);
+      } catch (err) {
+        console.error("API error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // 🔹 Filter olunmuş məhsullar
+  const filteredProducts =
+    selectedCategory === "all"
+      ? products
+      : products.filter((p) => p.category === selectedCategory);
+
+  // 🔹 Yüklənən məhsullar (ilk 8, sonra +8)
+  const visibleProducts = filteredProducts.slice(0, visibleCount);
+
+  if (loading) {
+    return <div className="loading">Yüklənir...</div>;
+  }
+
   return (
     <div className="productPage1">
       <img src={Left} className="left" alt="left-decor" />
@@ -119,39 +56,70 @@ function ProductPage1() {
         <h2 className="title">Məhsullarımız</h2>
         <p className="subtitle">Ənənəvi ləzzətlərimizlə tanış olun</p>
 
+        {/* 🔹 Kategoriyalar */}
         <div className="categories">
-          {categories.map((cat, index) => (
+          {categories.map((cat) => (
             <div
-              key={index}
-              className={`category-btn ${index === 0 ? "active" : ""}`}
+              key={cat.id}
+              className={`category-btn ${
+                selectedCategory === cat.id ? "active" : ""
+              }`}
+              onClick={() => {
+                setSelectedCategory(cat.id);
+                setVisibleCount(8); // 🔹 yeni kategoriya seçiləndə resetlənir
+              }}
             >
-              {cat}
+              {cat.name_az}
             </div>
           ))}
         </div>
 
+        {/* 🔹 Məhsullar */}
         <div className="products">
-          {products.map((item) => (
+          {visibleProducts.map((item) => (
             <div className="product-card" key={item.id}>
-              <img src={item.image} alt={item.name} />
+              <img src={item.image} alt={item.name_az} />
               <div className="info">
                 <div className="text">
-                  {" "}
-                  <h3>{item.name}</h3>
-                  <p>{item.desc}</p>
+                  <h3>{item.name_az}</h3>
+                  <p>{item.description_az}</p>
                 </div>
-                <span className="price">{item.price}</span>
+                <span className="price">{item.cost} AZN</span>
               </div>
-              <button className="add-btn">
-                Səbətə əlavə et{" "}
+              <button
+                className="add-btn"
+                onClick={() => {
+                  const basket =
+                    JSON.parse(localStorage.getItem("my_basket")) || [];
+
+                  // Əgər məhsul artıq varsa, təkrar əlavə etmə
+                  if (!basket.includes(item.id)) {
+                    basket.push(item.id);
+                    localStorage.setItem("my_basket", JSON.stringify(basket));
+                    alert(`${item.name_az} səbətə əlavə olundu ✅`);
+                  } else {
+                    alert(`${item.name_az} artıq səbətdə var`);
+                  }
+                }}
+              >
+                Səbətə əlavə et
                 <div className="icon">
-                  <IoIosArrowRoundForward />{" "}
+                  <IoIosArrowRoundForward />
                 </div>
               </button>
             </div>
           ))}
         </div>
-        <div className="more">Daha çox</div>
+
+        {/* 🔹 Daha çox */}
+        {visibleCount < filteredProducts.length && (
+          <div
+            className="more"
+            onClick={() => setVisibleCount((prev) => prev + 8)}
+          >
+            Daha çox
+          </div>
+        )}
       </div>
     </div>
   );

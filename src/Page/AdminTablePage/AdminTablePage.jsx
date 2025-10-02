@@ -2,9 +2,9 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import "./AdminTablePage.scss";
 
-const TABLES_URL = "http://192.168.0.164:8000/api/tables/";
-const BASKETS_URL = "http://192.168.0.164:8000/api/baskets/";
-const RESERVATIONS_URL = "http://192.168.0.164:8000/api/reservations/";
+const TABLES_URL = "http://172.20.5.167:8001/api/tables/";
+const BASKETS_URL = "http://172.20.5.167:8001/api/baskets/";
+const RESERVATIONS_URL = "http://172.20.5.167:8001/api/reservations/";
 const SOON_THRESHOLD_MIN = 5;
 
 /* ================= Utils ================= */

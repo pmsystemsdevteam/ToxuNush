@@ -41,11 +41,11 @@ import "./AdminRoomAllOrderPage.scss";
 // API service functions for rooms
 const apiService = {
   fetchRoomBaskets: () =>
-    fetch("http://192.168.0.164:8000/api/room-baskets/").then((r) => r.json()),
+    fetch("http://172.20.5.167:8001/api/room-baskets/").then((r) => r.json()),
   fetchRooms: () =>
-    fetch("http://192.168.0.164:8000/api/rooms/").then((r) => r.json()),
+    fetch("http://172.20.5.167:8001/api/rooms/").then((r) => r.json()),
   fetchRoomReservations: () =>
-    fetch("http://192.168.0.164:8000/api/room-reservations/").then((r) => r.json()),
+    fetch("http://172.20.5.167:8001/api/room-reservations/").then((r) => r.json()),
 };
 
 function TabPanel({ children, value, index, ...other }) {

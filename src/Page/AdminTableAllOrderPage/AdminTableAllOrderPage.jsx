@@ -41,11 +41,11 @@ import "./AdminTableAllOrderPage.scss";
 // API service functions
 const apiService = {
   fetchBaskets: () =>
-    fetch("http://192.168.0.164:8000/api/baskets/").then((r) => r.json()),
+    fetch("http://172.20.5.167:8001/api/baskets/").then((r) => r.json()),
   fetchTables: () =>
-    fetch("http://192.168.0.164:8000/api/tables/").then((r) => r.json()),
+    fetch("http://172.20.5.167:8001/api/tables/").then((r) => r.json()),
   fetchReservations: () =>
-    fetch("http://192.168.0.164:8000/api/reservations/").then((r) => r.json()),
+    fetch("http://172.20.5.167:8001/api/reservations/").then((r) => r.json()),
 };
 
 function TabPanel({ children, value, index, ...other }) {

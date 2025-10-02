@@ -5,11 +5,11 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 // -------- API URLs ----------
-const TABLES_URL = "http://192.168.0.164:8000/api/tables/";
-const ROOMS_URL = "http://192.168.0.164:8000/api/rooms/";
-const BASKETS_URL = "http://192.168.0.164:8000/api/baskets/";
-const ROOM_BASKETS_URL = "http://192.168.0.164:8000/api/room-baskets/";
-const TIMES_URL = "http://192.168.0.164:8000/api/restoranttime/";
+const TABLES_URL = "http://172.20.5.167:8001/api/tables/";
+const ROOMS_URL = "http://172.20.5.167:8001/api/rooms/";
+const BASKETS_URL = "http://172.20.5.167:8001/api/baskets/";
+const ROOM_BASKETS_URL = "http://172.20.5.167:8001/api/room-baskets/";
+const TIMES_URL = "http://172.20.5.167:8001/api/restoranttime/";
 
 // -------- localStorage keys ----------
 const ACTIVE_CTX_KEY = "activeContext"; // 't' | 'r'

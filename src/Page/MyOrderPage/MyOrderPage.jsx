@@ -33,7 +33,7 @@ function MyOrderPage() {
         setLoading(true);
         
         // Masalar məlumatını al
-        const tablesResponse = await fetch('http://192.168.0.164:8000/api/tables/');
+        const tablesResponse = await fetch('http://172.20.5.167:8001/api/tables/');
         if (!tablesResponse.ok) {
           throw new Error('Masalar API cavab vermədi');
         }
@@ -41,7 +41,7 @@ function MyOrderPage() {
         setTables(tablesData);
         
         // Sifariş məlumatlarını al
-        const ordersResponse = await fetch('http://192.168.0.164:8000/api/baskets/');
+        const ordersResponse = await fetch('http://172.20.5.167:8001/api/baskets/');
         if (!ordersResponse.ok) {
           throw new Error('Sifarişlər API cavab vermədi');
         }
