@@ -2,8 +2,8 @@ import React from "react";
 import "./ProductPage1.scss";
 
 // dekorasiya üçün şəkillər
-import Left from "../../Image/HomeLeft.png";
-import Right from "../../Image/HomeRight.png";
+import Left from "../../Image/MenuLeft.png";
+import Right from "../../Image/MenuRight.png";
 import { IoIosArrowRoundForward } from "react-icons/io";
 
 const categories = [
@@ -19,6 +19,30 @@ const categories = [
 ];
 
 const products = [
+  {
+    id: 1,
+    name: "Dolma",
+    desc: "isti, ət",
+    price: "8.00 AZN",
+    image:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnrPHq7um_b7tNpwVrv4qMpnQL9TWFXhWNPA&s",
+  },
+  {
+    id: 1,
+    name: "Dolma",
+    desc: "isti, ət",
+    price: "8.00 AZN",
+    image:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnrPHq7um_b7tNpwVrv4qMpnQL9TWFXhWNPA&s",
+  },
+  {
+    id: 1,
+    name: "Dolma",
+    desc: "isti, ət",
+    price: "8.00 AZN",
+    image:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnrPHq7um_b7tNpwVrv4qMpnQL9TWFXhWNPA&s",
+  },
   {
     id: 1,
     name: "Dolma",

@@ -13,7 +13,7 @@
     min-height: 165vh;
   }
   .basketPage {
-    position: absolute;
+    position: relative;
     width: 100%;
     top: 0;
     left: 0;
@@ -24,7 +24,6 @@
     font-family: "Poppins", sans-serif;
     padding: 50px 0px;
 
-    /* 🔹 Başlıq */
     .title {
       color: #000;
       font-size: 40px;
@@ -46,7 +45,6 @@
       gap: 12px;
       margin-top: 10px;
       margin-bottom: 40px;
-
       @media (max-width: 768px) {
         padding: 8px 12px;
         width: 100%;
@@ -69,7 +67,6 @@
       }
     }
 
-    /* 🔹 Boş səbət */
     .empty-basket {
       display: flex;
       flex-direction: column;
@@ -424,7 +421,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-          font-family: "Poppins", sans-serif;
+            font-family: "Poppins", sans-serif;
 
             .icon {
               margin-left: 8px;
@@ -446,21 +443,26 @@
     }
   }
 
-  /* Dekor */
   .frontPage {
-    position: relative;
-    top: 0;
-    left: 0;
+    position: absolute;
     width: 100%;
-    height: 100%;
+    height: auto; // 100% əvəzinə
     z-index: 1;
-
+    height: 100%;
     .left {
       height: 370px;
       width: 200px;
       position: absolute;
       left: 0px;
-      bottom: 20px;
+      bottom: 0px !important;
+      @media (max-width: 1300px) {
+        height: 270px;
+        width: 140px;
+      }
+      @media (max-width: 768px) {
+        height: 180px;
+        width: 100px;
+      }
     }
 
     .right {
@@ -469,6 +471,14 @@
       position: absolute;
       right: 0px;
       top: 40px;
+      @media (max-width: 1300px) {
+        height: 270px;
+        width: 140px;
+      }
+      @media (max-width: 768px) {
+        height: 180px;
+        width: 100px;
+      }
     }
   }
 }

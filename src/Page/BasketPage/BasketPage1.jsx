@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import "./BasketPage1.scss";
 import { FiShoppingBag } from "react-icons/fi";
-import Left from "../../Image/HomeLeft.png";
-import Right from "../../Image/HomeRight.png";
+import Left from "../../Image/BasketLeft.png";
+import Right from "../../Image/BasketRight.png";
 import { MdTableBar } from "react-icons/md";
 import { IoCloseCircleOutline } from "react-icons/io5";
 import {

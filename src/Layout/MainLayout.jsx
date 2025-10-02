@@ -16,6 +16,7 @@ import Navbar1 from "./Navbar/Navbar1";
 import HomePage1 from "../Page/HomePage/HomePage1";
 import ProductPage1 from "../Page/ProductPage/ProductPage1";
 import BasketPage1 from "../Page/BasketPage/BasketPage1";
+import MyOrderPage1 from "../Page/MyOrderPage/MyOrderPage1";
 
 // LocalStorage açarları
 const TABLE_KEY = "table";           // t gələndə yazılacaq
@@ -94,7 +95,7 @@ function MainLayout() {
           {/* Digər səhifələr */}
           <Route path="/product" element={<ProductPage1 />} />
           <Route path="/basket" element={<BasketPage1 />} />
-          <Route path="/myOrder" element={<MyOrderPage />} />
+          <Route path="/myOrder" element={<MyOrderPage1 />} />
         </Routes>
       </main>
       <Footer />
