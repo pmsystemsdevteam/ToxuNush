@@ -177,7 +177,7 @@ function BasketPage1() {
             <MdTableBar />
           </div>
           <span className="label">Masa:</span>
-          <span className="value">{masa ? masa :"-"}</span>
+          <span className="value">{masa ? masa : "-"}</span>
         </div>
 
         {isEmpty ? (
@@ -241,26 +241,34 @@ function BasketPage1() {
               ))}
 
               <div className="total-section">
-                <div className="total-row">
-                  <span>Məbləğ: </span>
-                  <span>{calculateTotal()} AZN</span>
-                </div>
-                <div className="total-row">
-                  <span>Servis haqqı: </span>
-                  <span>{calculateServiceFee()} AZN</span>
-                </div>
-                <div className="total-row grand-total">
-                  <span>Ümumi: </span>
-                  <span>{calculateGrandTotal()} AZN</span>
-                </div>
-                <div className="total-row time-info">
-                  <span>Hazırlanma müddəti: </span>
-                  <span>{calculateTotalTime()} dəqiqə</span>
-                </div>
+                <form action="">
+                  <div className="box1">
+                    <label>Məhsul qiyməti</label>
+                    <p>{calculateTotal()}</p>
+                    <span>₼</span>
+                  </div>
+                  <div className="box1">
+                    <label>Servis haqqı</label>
+                    <p>{calculateServiceFee()}</p>
+                    <span>₼</span>
+                  </div>
+                  <div className="box1">
+                    <label>Ümumi hesab</label>
+                    <p>{calculateGrandTotal()}</p>
+                    <span>₼</span>
+                  </div>
+                  <div className="box1">
+                    <label>Hazırlanma müddəti</label>
+                    <p>{calculateTotalTime()}</p>
+                    <span>₼</span>
+                  </div>
+                </form>
               </div>
 
               <input placeholder="Mətbəx üçün qeyd" />
-              <button className="confirm-btn">Təsdiq et</button>
+              <button className="confirm-btn">
+                <div className="buttonnn">Təsdiq et</div>
+              </button>
             </div>
 
             <h2 className="other-products">Digər məhsullar</h2>
